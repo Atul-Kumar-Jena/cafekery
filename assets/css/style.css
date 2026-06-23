@@ -258,12 +258,13 @@ h1, h2, h3, h4 { line-height: 1.05; letter-spacing: -0.01em; font-weight: 800; }
 }
 .lineart path {
   fill: none;
-  stroke: var(--c-line);
-  stroke-width: 2.5;
+  stroke: #d39b66; /* deeper tan so it reads clearly on cream */
+  stroke-width: 3.5;
   stroke-linecap: round;
   stroke-linejoin: round;
+  opacity: 0.85;
   /* visible by default (no-JS fallback); main.js measures the path
-     and animates a slow draw-in over ~9s */
+     and animates the slow draw-in */
   stroke-dashoffset: 0;
 }
 
