@@ -152,7 +152,27 @@
     }
   }
 
-  /* (page-spanning line-art is built + scroll-scrubbed in scroll.js) */
+  /* ---- Hero line-art: gentle draw-in on load --------------- */
+  var linePath = document.querySelector(".lineart path");
+  if (linePath && typeof linePath.getTotalLength === "function") {
+    var reduceLine = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!reduceLine) {
+      try {
+        var total = linePath.getTotalLength();
+        linePath.style.strokeDasharray = total;
+        linePath.style.strokeDashoffset = total;
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            linePath.style.transition =
+              "stroke-dashoffset 6.5s cubic-bezier(0.4, 0, 0.15, 1) 0.3s";
+            linePath.style.strokeDashoffset = "0";
+          });
+        });
+      } catch (e) {
+        /* leave it visible */
+      }
+    }
+  }
 
   /* ---- Back-to-top (injected, no per-page markup) ---------- */
   var toTop = document.createElement("button");

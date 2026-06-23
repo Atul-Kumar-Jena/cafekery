@@ -63,7 +63,6 @@ body {
   background: var(--c-cream);
   line-height: 1.65;
   overflow-x: hidden;
-  position: relative;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -400,27 +399,8 @@ body.noScroll .buttonToggleNavAside span:nth-child(3) { transform: translateY(-7
   justify-content: center;
   padding-top: var(--header-h);
   padding-bottom: clamp(2rem, 6vw, 5rem);
-  background: transparent; /* body cream shows; page line-art sits behind */
+  background: var(--c-cream);
   overflow: hidden;
-}
-
-/* page-spanning line-art "follower" (built + scrubbed in scroll.js) */
-.lineart-page {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: -1;
-  pointer-events: none;
-}
-.lineart-page__path {
-  fill: none;
-  stroke: var(--c-line);
-  stroke-width: 2.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-@media (prefers-reduced-motion: reduce) {
-  .lineart-page__path { stroke-dashoffset: 0 !important; }
 }
 
 .wordmark {
@@ -622,7 +602,13 @@ body.noScroll .buttonToggleNavAside span:nth-child(3) { transform: translateY(-7
 }
 .foodtile::before {
   content: ""; position: absolute; inset: 0; z-index: -1;
-  background: var(--tile, linear-gradient(135deg, #c1643b, #2b1a12));
+  /* photo on top, brand gradient underneath as an automatic fallback
+     if the image can't load (so it never shows a broken tile) */
+  background-image: var(--photo, linear-gradient(#0000, #0000)),
+                    var(--tile, linear-gradient(135deg, #c1643b, #2b1a12));
+  background-size: cover, cover;
+  background-position: center, center;
+  background-repeat: no-repeat;
   transform-origin: center;
   transition: transform 1s var(--ease);
 }
@@ -633,12 +619,12 @@ body.noScroll .buttonToggleNavAside span:nth-child(3) { transform: translateY(-7
   background: radial-gradient(60% 60% at 30% 20%, rgba(255,255,255,0.22), transparent 60%),
     linear-gradient(0deg, rgba(43,26,18,0.55), transparent 55%);
 }
-.tile-choc { --tile: linear-gradient(150deg, #5b3018, #2b1a12); }
-.tile-salad { --tile: linear-gradient(150deg, #6f8f3a, #2f7d4f); }
-.tile-pancake { --tile: linear-gradient(150deg, #e0a45f, #c1643b); }
-.tile-toast { --tile: linear-gradient(150deg, #b5713f, #7a3c22); }
-.tile-coffee { --tile: linear-gradient(150deg, #4a2c1c, #82512f); }
-.tile-berry { --tile: linear-gradient(150deg, #9c3b52, #c1643b); }
+.tile-choc { --tile: linear-gradient(150deg, #5b3018, #2b1a12); --photo: url("https://images.unsplash.com/photo-1511381939415-e44015466834?auto=format&fit=crop&w=900&q=70"); }
+.tile-salad { --tile: linear-gradient(150deg, #6f8f3a, #2f7d4f); --photo: url("https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=900&q=70"); }
+.tile-pancake { --tile: linear-gradient(150deg, #e0a45f, #c1643b); --photo: url("https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?auto=format&fit=crop&w=900&q=70"); }
+.tile-toast { --tile: linear-gradient(150deg, #b5713f, #7a3c22); --photo: url("https://images.unsplash.com/photo-1484723091739-30a097e8f929?auto=format&fit=crop&w=900&q=70"); }
+.tile-coffee { --tile: linear-gradient(150deg, #4a2c1c, #82512f); --photo: url("https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=900&q=70"); }
+.tile-berry { --tile: linear-gradient(150deg, #9c3b52, #c1643b); --photo: url("https://images.unsplash.com/photo-1498557850523-fd3d118b962e?auto=format&fit=crop&w=900&q=70"); }
 
 /* =============================================================
    LOOP CAROUSEL (infinite marquee)
@@ -865,19 +851,24 @@ body.noScroll .buttonToggleNavAside span:nth-child(3) { transform: translateY(-7
   position: absolute;
   inset: 0;
   z-index: -2;
-  background: var(--bg, linear-gradient(160deg, #3a2418, #a4502c));
+  background-image: var(--photo, linear-gradient(#0000, #0000)),
+                    var(--bg, linear-gradient(160deg, #3a2418, #a4502c));
+  background-size: cover, cover;
+  background-position: center, center;
+  background-repeat: no-repeat;
 }
 .hpanel::after {
   content: "";
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: radial-gradient(70% 70% at 25% 30%, rgba(255,255,255,0.12), transparent 60%),
-    linear-gradient(0deg, rgba(43,26,18,0.55), transparent 60%);
+  /* keep cream text legible over any photo */
+  background: linear-gradient(115deg, rgba(43, 26, 18, 0.72), rgba(43, 26, 18, 0.34) 70%),
+    linear-gradient(0deg, rgba(43, 26, 18, 0.5), transparent 55%);
 }
-.hpanel--morning { --bg: linear-gradient(160deg, #6b4a3a, #d49a63); }
-.hpanel--midday  { --bg: linear-gradient(160deg, #7a3c22, #c1643b); }
-.hpanel--sunset  { --bg: linear-gradient(160deg, #3a2418, #a4502c 70%, #d98b5f); }
+.hpanel--morning { --bg: linear-gradient(160deg, #6b4a3a, #d49a63); --photo: url("https://images.unsplash.com/photo-1442512595331-e89e73853f31?auto=format&fit=crop&w=1600&q=70"); }
+.hpanel--midday  { --bg: linear-gradient(160deg, #7a3c22, #c1643b); --photo: url("https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?auto=format&fit=crop&w=1600&q=70"); }
+.hpanel--sunset  { --bg: linear-gradient(160deg, #3a2418, #a4502c 70%, #d98b5f); --photo: url("https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1600&q=70"); }
 .hpanel__inner { max-width: 42rem; }
 .hpanel__index { font-size: 0.78rem; letter-spacing: 0.32em; text-transform: uppercase; opacity: 0.8; }
 .hpanel__title { font-size: clamp(3rem, 9vw, 8rem); line-height: 0.95; font-weight: 800; letter-spacing: -0.02em; margin: 0.5rem 0 1rem; }
@@ -976,3 +967,19 @@ body.noScroll .buttonToggleNavAside span:nth-child(3) { transform: translateY(-7
 .ticket li { display: flex; justify-content: space-between; font-size: 0.92rem; }
 .ticket__done { margin-top: 0.9rem; width: 100%; }
 .kds-empty { color: var(--c-cocoa-soft); margin-top: 2rem; }
+
+/* ---- Pen-mask reveal for filled handwriting -------------- */
+.hw-pen {
+  fill: none;
+  stroke: #fff; /* white = "revealed" inside the mask */
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: var(--l);
+  stroke-dashoffset: var(--l);
+}
+.handwriting-word.is-active .hw-pen {
+  animation: drawLine var(--t) linear var(--d) forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hw-pen { stroke-dashoffset: 0; animation: none; }
+}
