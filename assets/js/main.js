@@ -152,30 +152,7 @@
     }
   }
 
-  /* ---- Background line-art: slow, gentle draw-in -----------
-     Measure the real path length so the draw completes exactly,
-     then ease it on over ~9s. Visible by default for no-JS. ---- */
-  var linePath = document.querySelector(".lineart path");
-  if (linePath && typeof linePath.getTotalLength === "function") {
-    var reduceLine = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!reduceLine) {
-      try {
-        var total = linePath.getTotalLength();
-        linePath.style.strokeDasharray = total;
-        linePath.style.strokeDashoffset = total;
-        // next frame: transition offset back to 0 (draws the line)
-        requestAnimationFrame(function () {
-          requestAnimationFrame(function () {
-            linePath.style.transition =
-              "stroke-dashoffset 9s cubic-bezier(0.33, 0, 0.2, 1) 0.4s";
-            linePath.style.strokeDashoffset = "0";
-          });
-        });
-      } catch (e) {
-        /* leave it visible */
-      }
-    }
-  }
+  /* (page-spanning line-art is built + scroll-scrubbed in scroll.js) */
 
   /* ---- Back-to-top (injected, no per-page markup) ---------- */
   var toTop = document.createElement("button");
