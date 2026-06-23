@@ -12,12 +12,13 @@
   "use strict";
 
   var SELECTOR = ".title-special";
-  // A static (non-variable) handwriting TTF that OpenType.js can parse.
+  // A flowing signature script (static, non-variable TTF) that
+  // OpenType.js can parse — stands in for the original "With Hearty".
   var FONT_URL =
-    "https://cdn.jsdelivr.net/gh/google/fonts/ofl/shadowsintolight/ShadowsIntoLight-Regular.ttf";
+    "https://cdn.jsdelivr.net/gh/google/fonts/ofl/sacramento/Sacramento-Regular.ttf";
   var DELAY_MULTIPLIER = 0.65; // controls overlap between strokes
   var INITIAL_DELAY = 0.1; // seconds before the first stroke
-  var SPEED_DIVISOR = 1400; // larger = slower drawing
+  var SPEED_DIVISOR = 1600; // larger = slower drawing
 
   var targets = document.querySelectorAll(SELECTOR);
   if (!targets.length) return;

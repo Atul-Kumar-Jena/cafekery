@@ -7,15 +7,22 @@ on the forensic audit brief in `/docs`.
 
 ## Highlights
 
-- **Handwriting stroke-draw animation** — headings tagged `.title-special` are
-  turned into per-character SVG paths with [OpenType.js](https://opentype.js.org)
-  and animated by tweening `stroke-dashoffset` (path length → 0) with a
-  staggered, slightly-overlapping delay. Degrades gracefully to the plain
-  styled text when JS, the library, or the font is unavailable.
-- **Sticky header** that turns fixed and slides in once the hero banner leaves
-  the viewport (IntersectionObserver).
-- **Scroll-reveal** for sections and staggered lists.
-- **Infinite loop carousel** (marquee) that scrolls at a constant ~0.9px/frame.
+- **Food-filled wordmark hero** — a giant `HAVEN` whose letters are clipped to
+  food photography via `background-clip: text`, with a warm food-coloured
+  gradient layered underneath as an automatic fallback if the photo fails.
+- **Flowing line-art** — a continuous single-line SVG illustration that draws
+  itself in across the hero (`stroke-dashoffset`).
+- **Signature handwriting stroke-draw animation** — cursive phrases tagged
+  `.title-special` (e.g. *“Not Heaven, but pretty close!”*) are turned into
+  per-character SVG paths with [OpenType.js](https://opentype.js.org) using a
+  script font, then drawn by tweening `stroke-dashoffset` (path length → 0)
+  with a staggered, overlapping delay. Degrades to the plain styled script
+  text when JS, the library, or the font is unavailable.
+- **Giant typographic sections** — oversized `BRUNCH` / `COFFEE` words with
+  script overlays (*9am – 2pm*, *from 8am*).
+- **Sticky header** that turns fixed and slides in once the hero leaves the
+  viewport (IntersectionObserver); **scroll-reveal** for sections and lists;
+  **infinite loop carousel** at a constant ~0.9px/frame.
 - Responsive layout with a full-screen mobile menu, accessible forms, and
   `prefers-reduced-motion` support throughout.
 
@@ -28,7 +35,7 @@ on the forensic audit brief in `/docs`.
 | Sand | `#efdacc` |
 | Cocoa | `#2b1a12` |
 | Sans | Archivo (DIN-2014 stand-in) |
-| Handwriting | Shadows Into Light (With Hearty stand-in) |
+| Script / handwriting | Sacramento (With Hearty stand-in) |
 
 ## Structure
 

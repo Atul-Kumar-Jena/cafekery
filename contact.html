@@ -3,44 +3,43 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Visit &amp; Book — HAVEN Annecy</title>
-  <meta name="description" content="Find HAVEN in the old town of Annecy. Opening hours, location, contact details and table reservations." />
+  <title>Reserve — HAVEN Annecy</title>
+  <meta name="description" content="Find HAVEN in the old town of Annecy. Opening hours, location, contact details, gifting and table reservations." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="assets/css/style.css" />
 </head>
 <body>
 
+  <aside class="nominee" aria-label="Awwwards nominee"><b>W.</b>Nominee</aside>
+
   <header class="region-header">
     <div class="header__inner">
-      <a class="brand" href="index.html" aria-label="HAVEN home">
-        <svg class="brand__mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <path d="M6 13h16v6a7 7 0 0 1-7 7h-2a7 7 0 0 1-7-7v-6Z" stroke="currentColor" stroke-width="2"/>
-          <path d="M22 15h3a3 3 0 0 1 0 6h-3" stroke="currentColor" stroke-width="2"/>
-          <path d="M11 4c-1.2 1.4-1.2 2.6 0 4M16 3c-1.2 1.4-1.2 2.6 0 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-        <span>HAVEN</span>
-      </a>
+      <a class="brand" href="index.html" aria-label="HAVEN home">haven</a>
       <nav class="nav" aria-label="Primary">
         <ul class="nav__list">
-          <li><a class="nav__link" href="index.html">Home</a></li>
-          <li><a class="nav__link" href="about.html">About</a></li>
-          <li><a class="nav__link" href="menu.html">Menu</a></li>
-          <li><a class="nav__link active" href="contact.html">Visit</a></li>
+          <li><a class="nav__link" href="index.html"><span>Home</span></a></li>
+          <li><a class="nav__link" href="menu.html#coffee"><span>Coffee</span><small>from 8:00</small></a></li>
+          <li><a class="nav__link" href="menu.html#brunch"><span>Brunch</span><small>9:00 – 2:00</small></a></li>
+          <li><a class="nav__link" href="about.html"><span>Haven</span></a></li>
         </ul>
-        <span class="nav__lang">EN / FR</span>
+        <div class="nav__actions">
+          <a class="btn active" href="contact.html">Reserve</a>
+          <a class="btn btn--outline" href="contact.html#gifting">Gifting</a>
+        </div>
       </nav>
       <button class="buttonToggleNavAside" aria-label="Toggle menu" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
     </div>
   </header>
+  <span class="nav__lang">EN / FR</span>
 
   <section class="page-head">
     <div class="container">
-      <span class="eyebrow" style="color:#e8a87c">Visit us</span>
-      <h1 class="section__title">Find HAVEN</h1>
-      <p class="lead">In the old town, a short walk from the canal and the lake.</p>
+      <span class="eyebrow">Visit us</span>
+      <h1 class="title-special">Find Haven</h1>
+      <p class="lead" style="margin-top:1rem">In the old town, a short walk from the canal and the lake.</p>
     </div>
   </section>
 
@@ -48,27 +47,18 @@
     <div class="container contact-grid">
 
       <div class="animate--slide-in">
-        <h2 class="title-special">Come and see us</h2>
+        <h2 class="head-italic" style="font-size:clamp(1.8rem,4vw,2.6rem)">Come and see us</h2>
         <dl class="info-list">
-          <div>
-            <dt>Address</dt>
-            <dd>Rue Sainte-Claire<br />74000 Annecy, France</dd>
-          </div>
-          <div>
-            <dt>Reservations</dt>
-            <dd><a href="tel:+33450000000">+33 4 50 00 00 00</a></dd>
-          </div>
-          <div>
-            <dt>Email</dt>
-            <dd><a href="mailto:bonjour@haven-annecy.fr">bonjour@haven-annecy.fr</a></dd>
-          </div>
+          <div><dt>Address</dt><dd>Rue Sainte-Claire<br />74000 Annecy, France</dd></div>
+          <div><dt>Reservations</dt><dd><a href="tel:+33450000000">+33 4 50 00 00 00</a></dd></div>
+          <div><dt>Email</dt><dd><a href="mailto:bonjour@haven-annecy.fr">bonjour@haven-annecy.fr</a></dd></div>
           <div>
             <dt>Opening hours</dt>
             <dd>
               <div class="hours">
-                <div><span>Monday – Friday</span><span>8:00 – 16:00</span></div>
-                <div><span>Saturday – Sunday</span><span>9:00 – 17:00</span></div>
-                <div><span>Kitchen</span><span>until 15:30</span></div>
+                <div><span>Coffee</span><span>from 8:00</span></div>
+                <div><span>Brunch</span><span>9:00 – 2:00</span></div>
+                <div><span>Open</span><span>daily</span></div>
               </div>
             </dd>
           </div>
@@ -77,33 +67,18 @@
 
       <div class="animate--slide-in">
         <span class="eyebrow">Book a table</span>
-        <h2 class="section__title" style="font-size:clamp(1.6rem,3.5vw,2.4rem)">Reserve your spot</h2>
+        <h2 class="head-italic" style="font-size:clamp(1.6rem,3.5vw,2.4rem);margin-top:0.5rem">Reserve your spot</h2>
         <form class="form" data-demo data-success="Merci! Your request is in — we'll confirm by email shortly." style="margin-top:1.5rem" novalidate>
-          <div class="field">
-            <label for="name">Name</label>
-            <input id="name" name="name" type="text" placeholder="Your name" required />
-          </div>
-          <div class="field">
-            <label for="email">Email</label>
-            <input id="email" name="email" type="email" placeholder="you@email.com" required />
-          </div>
+          <div class="field"><label for="name">Name</label><input id="name" name="name" type="text" placeholder="Your name" required /></div>
+          <div class="field"><label for="email">Email</label><input id="email" name="email" type="email" placeholder="you@email.com" required /></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.1rem">
-            <div class="field">
-              <label for="date">Date</label>
-              <input id="date" name="date" type="date" required />
-            </div>
+            <div class="field"><label for="date">Date</label><input id="date" name="date" type="date" required /></div>
             <div class="field">
               <label for="guests">Guests</label>
-              <select id="guests" name="guests">
-                <option>1</option><option>2</option><option>3</option>
-                <option>4</option><option>5</option><option>6+</option>
-              </select>
+              <select id="guests" name="guests"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6+</option></select>
             </div>
           </div>
-          <div class="field">
-            <label for="notes">Anything we should know?</label>
-            <textarea id="notes" name="notes" placeholder="Dietary needs, high chair, celebrations…"></textarea>
-          </div>
+          <div class="field"><label for="notes">Anything we should know?</label><textarea id="notes" name="notes" placeholder="Dietary needs, high chair, celebrations…"></textarea></div>
           <button class="btn" type="submit">Request a table</button>
           <p class="form__status" role="status" aria-live="polite"></p>
         </form>
@@ -123,44 +98,26 @@
     </div>
   </section>
 
+  <!-- GIFTING -->
+  <section class="section cta-band" id="gifting">
+    <div class="container">
+      <span class="eyebrow" style="color:var(--c-cream)">Gifting</span>
+      <h2 class="title-special" style="margin-top:0.4rem">Give a little Haven</h2>
+      <p class="lead" style="margin:1rem auto 0;color:rgba(255,250,247,0.85)">Gift cards for brunch, coffee or a bag of the guest roast — redeemable in-house any day of the week.</p>
+      <a class="btn btn--cream" href="mailto:bonjour@haven-annecy.fr?subject=Gift%20card">Enquire about gift cards</a>
+    </div>
+  </section>
+
   <footer class="footer">
     <div class="container">
       <div class="footer__grid">
         <div class="footer__brand">
-          <a class="brand" href="index.html">
-            <svg class="brand__mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-              <path d="M6 13h16v6a7 7 0 0 1-7 7h-2a7 7 0 0 1-7-7v-6Z" stroke="currentColor" stroke-width="2"/>
-              <path d="M22 15h3a3 3 0 0 1 0 6h-3" stroke="currentColor" stroke-width="2"/>
-              <path d="M11 4c-1.2 1.4-1.2 2.6 0 4M16 3c-1.2 1.4-1.2 2.6 0 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-            <span>HAVEN</span>
-          </a>
-          <p>A specialty-coffee café and all-day brunch house in the old town of Annecy, France.</p>
+          <a class="brand" href="index.html">haven</a>
+          <p>An Australian brunch &amp; coffee shop in the heart of Annecy, France.</p>
         </div>
-        <div>
-          <h4>Visit</h4>
-          <div class="footer__links">
-            <a href="about.html">About</a>
-            <a href="menu.html">Menu</a>
-            <a href="contact.html">Find us</a>
-          </div>
-        </div>
-        <div>
-          <h4>Hours</h4>
-          <div class="footer__links">
-            <span>Mon–Fri · 8–16</span>
-            <span>Sat–Sun · 9–17</span>
-            <span>Kitchen until 15:30</span>
-          </div>
-        </div>
-        <div>
-          <h4>Find us</h4>
-          <div class="footer__links">
-            <span>Rue Sainte-Claire</span>
-            <span>74000 Annecy</span>
-            <span>+33 4 50 00 00 00</span>
-          </div>
-        </div>
+        <div><h4>Visit</h4><div class="footer__links"><a href="about.html">About</a><a href="menu.html">Menu</a><a href="contact.html">Find us</a></div></div>
+        <div><h4>Hours</h4><div class="footer__links"><span>Coffee from 8:00</span><span>Brunch 9:00 – 2:00</span><span>Open daily</span></div></div>
+        <div><h4>Find us</h4><div class="footer__links"><span>Rue Sainte-Claire</span><span>74000 Annecy</span><span>+33 4 50 00 00 00</span></div></div>
       </div>
       <div class="footer__bottom">
         <span>© <span data-year>2026</span> HAVEN Annecy. All rights reserved.</span>

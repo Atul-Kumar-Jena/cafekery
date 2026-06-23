@@ -3,85 +3,66 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>About — HAVEN Annecy</title>
-  <meta name="description" content="The story behind HAVEN: a specialty-coffee café and brunch house in the old town of Annecy, built on slow mornings and careful sourcing." />
+  <title>Haven | About — HAVEN Annecy</title>
+  <meta name="description" content="The story behind HAVEN: an Australian brunch & coffee shop in the heart of Annecy, built on slow mornings, specialty coffee and seasonal cooking." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="assets/css/style.css" />
 </head>
 <body>
 
+  <aside class="nominee" aria-label="Awwwards nominee"><b>W.</b>Nominee</aside>
+
   <header class="region-header">
     <div class="header__inner">
-      <a class="brand" href="index.html" aria-label="HAVEN home">
-        <svg class="brand__mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <path d="M6 13h16v6a7 7 0 0 1-7 7h-2a7 7 0 0 1-7-7v-6Z" stroke="currentColor" stroke-width="2"/>
-          <path d="M22 15h3a3 3 0 0 1 0 6h-3" stroke="currentColor" stroke-width="2"/>
-          <path d="M11 4c-1.2 1.4-1.2 2.6 0 4M16 3c-1.2 1.4-1.2 2.6 0 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-        <span>HAVEN</span>
-      </a>
+      <a class="brand" href="index.html" aria-label="HAVEN home">haven</a>
       <nav class="nav" aria-label="Primary">
         <ul class="nav__list">
-          <li><a class="nav__link" href="index.html">Home</a></li>
-          <li><a class="nav__link active" href="about.html">About</a></li>
-          <li><a class="nav__link" href="menu.html">Menu</a></li>
-          <li><a class="nav__link" href="contact.html">Visit</a></li>
+          <li><a class="nav__link" href="index.html"><span>Home</span></a></li>
+          <li><a class="nav__link" href="menu.html#coffee"><span>Coffee</span><small>from 8:00</small></a></li>
+          <li><a class="nav__link" href="menu.html#brunch"><span>Brunch</span><small>9:00 – 2:00</small></a></li>
+          <li><a class="nav__link active" href="about.html"><span>Haven</span></a></li>
         </ul>
-        <span class="nav__lang">EN / FR</span>
+        <div class="nav__actions">
+          <a class="btn" href="contact.html">Reserve</a>
+          <a class="btn btn--outline" href="contact.html#gifting">Gifting</a>
+        </div>
       </nav>
       <button class="buttonToggleNavAside" aria-label="Toggle menu" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
     </div>
   </header>
+  <span class="nav__lang">EN / FR</span>
 
   <section class="page-head">
     <div class="container">
-      <span class="eyebrow" style="color:#e8a87c">Our story</span>
-      <h1 class="section__title">Built on slow mornings</h1>
-      <p class="lead">From a six-seat coffee bar to the brunch room locals queue for on Sundays.</p>
+      <span class="eyebrow">Our story</span>
+      <h1 class="title-special">Not Heaven, but pretty close!</h1>
+      <p class="lead" style="margin-top:1rem">From a six-seat coffee bar to the Aussie brunch room Annecy queues for on Sundays.</p>
     </div>
   </section>
 
   <section class="section">
     <div class="container split">
-      <div class="split__media animate--slide-in">
-        <div class="foodtile tile-coffee">The first lever machine</div>
-      </div>
+      <div class="split__media animate--slide-in"><div class="foodtile tile-coffee">The first lever machine</div></div>
       <div class="animate--slide-in">
         <span class="eyebrow">2016 — the beginning</span>
-        <h2 class="title-special">From a corner counter</h2>
-        <p class="lead" style="margin-top:1.2rem">
-          HAVEN started as a narrow coffee counter on Rue Sainte-Claire with one
-          lever machine, a single pastry case and a stubborn belief that mornings
-          shouldn't be rushed.
-        </p>
-        <p style="margin-top:1rem;color:var(--c-cocoa-soft)">
-          Word travelled. The counter became a kitchen, the kitchen became a room,
-          and the room became the place you bring people the first time they visit
-          Annecy.
-        </p>
+        <h2 class="head-italic" style="font-size:clamp(1.8rem,4vw,2.8rem);margin-top:0.6rem">From a corner counter</h2>
+        <p class="lead" style="margin-top:1.2rem">HAVEN started as a narrow coffee counter on Rue Sainte-Claire with one lever machine, a single pastry case and a stubborn belief — borrowed from Australia — that brunch should be colourful, generous and unhurried.</p>
+        <p style="margin-top:1rem;color:var(--c-cocoa-soft)">Word travelled. The counter became a kitchen, the kitchen became a room, and the room became the place you bring people the first time they visit Annecy.</p>
       </div>
     </div>
   </section>
 
-  <section class="section stats">
+  <section class="section menu-showcase">
     <div class="container split split--reverse">
-      <div class="split__media animate--slide-in">
-        <div class="foodtile tile-salad">The market run, 7am</div>
-      </div>
+      <div class="split__media animate--slide-in"><div class="foodtile tile-salad">The market run, 7am</div></div>
       <div class="animate--slide-in">
         <span class="eyebrow">How we cook</span>
-        <h2 class="title-special">Led by the market</h2>
-        <p class="lead" style="margin-top:1.2rem">
-          Every plate begins at the morning market on the canal. We buy what is
-          best that day and write the specials on the way back.
-        </p>
-        <p style="margin-top:1rem;color:var(--c-cocoa-soft)">
-          It means the menu is never quite the same twice — and that's exactly
-          the point.
-        </p>
+        <h2 class="head-italic" style="font-size:clamp(1.8rem,4vw,2.8rem);margin-top:0.6rem">Led by the market</h2>
+        <p class="lead" style="margin-top:1.2rem">Every plate begins at the morning market on the canal. We buy what is best that day and write the specials on the way back.</p>
+        <p style="margin-top:1rem;color:var(--c-cocoa-soft)">It means the menu is never quite the same twice — and that's exactly the point. Every season brings its own brunch.</p>
       </div>
     </div>
   </section>
@@ -89,12 +70,12 @@
   <section class="section">
     <div class="container">
       <span class="eyebrow">What we stand for</span>
-      <h2 class="section__title">Three things we won't cut corners on</h2>
+      <h2 class="head-italic" style="font-size:clamp(2rem,5vw,3.2rem);margin-top:0.6rem">Three things we won't cut corners on</h2>
       <div class="values animate--slide-in-list">
         <div class="value-card">
           <div class="value-card__icon">☕</div>
           <h3>Coffee with provenance</h3>
-          <p>Single-origin, roasted weekly in the valley, and dialled in fresh every morning before doors open.</p>
+          <p>Single-origin espresso and filter, plus a rotating guest roaster — this month, Black Mass from Brisbane.</p>
         </div>
         <div class="value-card">
           <div class="value-card__icon">🤝</div>
@@ -102,9 +83,9 @@
           <p>We'd rather you wait two minutes longer than rush a flat white or hurry you out of your seat.</p>
         </div>
         <div class="value-card">
-          <div class="value-card__icon">♻️</div>
-          <h3>As little waste as we can</h3>
-          <p>Trim becomes stock, day-old bread becomes the French toast, and what's left is composted with a neighbour's farm.</p>
+          <div class="value-card__icon">🌿</div>
+          <h3>Local &amp; seasonal</h3>
+          <p>Colourful, generous plates built from local produce — with as little waste as we can manage.</p>
         </div>
       </div>
     </div>
@@ -112,9 +93,9 @@
 
   <section class="section cta-band">
     <div class="container">
-      <span class="eyebrow" style="color:#e8a87c">Come say hello</span>
-      <h2 class="section__title">We've saved you a seat</h2>
-      <a class="btn btn--light" href="contact.html">Find us &amp; book</a>
+      <span class="eyebrow" style="color:var(--c-cream)">Come say hello</span>
+      <h2 class="title-special" style="margin-top:0.4rem">We've saved you a seat</h2>
+      <a class="btn btn--cream" href="contact.html">Find us &amp; book</a>
     </div>
   </section>
 
@@ -122,40 +103,12 @@
     <div class="container">
       <div class="footer__grid">
         <div class="footer__brand">
-          <a class="brand" href="index.html">
-            <svg class="brand__mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-              <path d="M6 13h16v6a7 7 0 0 1-7 7h-2a7 7 0 0 1-7-7v-6Z" stroke="currentColor" stroke-width="2"/>
-              <path d="M22 15h3a3 3 0 0 1 0 6h-3" stroke="currentColor" stroke-width="2"/>
-              <path d="M11 4c-1.2 1.4-1.2 2.6 0 4M16 3c-1.2 1.4-1.2 2.6 0 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-            <span>HAVEN</span>
-          </a>
-          <p>A specialty-coffee café and all-day brunch house in the old town of Annecy, France.</p>
+          <a class="brand" href="index.html">haven</a>
+          <p>An Australian brunch &amp; coffee shop in the heart of Annecy, France.</p>
         </div>
-        <div>
-          <h4>Visit</h4>
-          <div class="footer__links">
-            <a href="about.html">About</a>
-            <a href="menu.html">Menu</a>
-            <a href="contact.html">Find us</a>
-          </div>
-        </div>
-        <div>
-          <h4>Hours</h4>
-          <div class="footer__links">
-            <span>Mon–Fri · 8–16</span>
-            <span>Sat–Sun · 9–17</span>
-            <span>Kitchen until 15:30</span>
-          </div>
-        </div>
-        <div>
-          <h4>Find us</h4>
-          <div class="footer__links">
-            <span>Rue Sainte-Claire</span>
-            <span>74000 Annecy</span>
-            <span>+33 4 50 00 00 00</span>
-          </div>
-        </div>
+        <div><h4>Visit</h4><div class="footer__links"><a href="about.html">About</a><a href="menu.html">Menu</a><a href="contact.html">Find us</a></div></div>
+        <div><h4>Hours</h4><div class="footer__links"><span>Coffee from 8:00</span><span>Brunch 9:00 – 2:00</span><span>Open daily</span></div></div>
+        <div><h4>Find us</h4><div class="footer__links"><span>Rue Sainte-Claire</span><span>74000 Annecy</span><span>+33 4 50 00 00 00</span></div></div>
       </div>
       <div class="footer__bottom">
         <span>© <span data-year>2026</span> HAVEN Annecy. All rights reserved.</span>
