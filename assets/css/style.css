@@ -253,7 +253,7 @@ h1, h2, h3, h4 { line-height: 1.05; letter-spacing: -0.01em; font-weight: 800; }
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: 1;
+  z-index: 3;
   overflow: visible;
 }
 .lineart path {
@@ -987,4 +987,27 @@ body.noScroll .buttonToggleNavAside span:nth-child(3) { transform: translateY(-7
 @media (prefers-reduced-motion: reduce) {
   .hw-stroke { stroke-dashoffset: 0; animation: none; }
   .hw-ink { opacity: 1; animation: none; }
+}
+
+/* ---- Page-spanning line-art that draws as you scroll ------ */
+.lineart-scroll {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;          /* above section content, below the fixed header */
+  pointer-events: none;
+  overflow: visible;
+}
+.lineart-scroll path {
+  fill: none;
+  stroke: #d39b66;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke; /* constant thickness at any scale */
+  opacity: 0.62;
+}
+.lineart-scroll .doodle { opacity: 0.7; }
+@media (prefers-reduced-motion: reduce) {
+  .lineart-scroll path { stroke-dashoffset: 0 !important; }
 }
