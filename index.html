@@ -8,6 +8,7 @@
   <meta property="og:title" content="HAVEN Annecy — Australian Brunch &amp; Coffee Shop" />
   <meta property="og:description" content="Aussie vibes in the heart of Annecy: colourful seasonal brunch and specialty coffee." />
   <meta property="og:type" content="website" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23c1643b%27/%3E%3Ctext x=%2716%27 y=%2723%27 font-family=%27Georgia,serif%27 font-size=%2720%27 fill=%27%23fffaf7%27 text-anchor=%27middle%27%3Eh%3C/text%3E%3C/svg%3E" />
   <link rel="stylesheet" href="assets/css/style.css" />
 </head>
 <body>
@@ -153,6 +154,34 @@
     </div>
   </section>
 
+  <!-- ===================== THE VIEW (side-scroll) ===================== -->
+  <section class="hview" id="view" aria-label="The view across the day">
+    <div class="hview__track">
+      <article class="hpanel hpanel--morning">
+        <div class="hpanel__inner">
+          <p class="hpanel__index">01 — Morning</p>
+          <h2 class="hpanel__title">First light,<br />first pour</h2>
+          <p class="hpanel__cap">The grinder hums before the street wakes. Single-origin espresso, warm pastry, the canal still mirror-flat.</p>
+        </div>
+      </article>
+      <article class="hpanel hpanel--midday">
+        <div class="hpanel__inner">
+          <p class="hpanel__index">02 — Midday</p>
+          <h2 class="hpanel__title">The long<br />table</h2>
+          <p class="hpanel__cap">Brunch in full colour — shared plates, clinking glasses, the room loud in the best way.</p>
+        </div>
+      </article>
+      <article class="hpanel hpanel--sunset">
+        <div class="hpanel__inner">
+          <p class="hpanel__index">03 — Golden hour</p>
+          <h2 class="hpanel__title">Last light<br />on the lake</h2>
+          <p class="hpanel__cap">An aperitivo as the mountains turn pink. Slow down — you're exactly where you should be.</p>
+        </div>
+      </article>
+    </div>
+    <span class="hview__hint">Scroll →</span>
+  </section>
+
   <!-- ============================ COFFEE ============================ -->
   <section class="bigtype" id="coffee-intro">
     <div class="container">
@@ -169,6 +198,26 @@
     </div>
   </section>
 
+  <!-- ===================== ORDER TO YOUR TABLE ===================== -->
+  <section class="section order-cta" id="order">
+    <div class="container order-grid">
+      <div>
+        <span class="eyebrow">Order to your table</span>
+        <h2 class="head-italic animate--slide-in" style="font-size:clamp(2rem,5vw,3.2rem);margin-top:0.6rem">No queue. No app. Just scan.</h2>
+        <div class="steps">
+          <div class="step animate--slide-in"><span class="step__n">1</span><div><h3>Scan the table code</h3><p>Every table has its own QR. It opens the menu with your table already attached.</p></div></div>
+          <div class="step animate--slide-in"><span class="step__n">2</span><div><h3>Choose at your pace</h3><p>Add what you fancy — your basket saves itself, even if the signal drops.</p></div></div>
+          <div class="step animate--slide-in"><span class="step__n">3</span><div><h3>Send to the kitchen</h3><p>One tap and it lands on the pass. We bring it over — no flagging anyone down.</p></div></div>
+        </div>
+      </div>
+      <div class="qr-card animate--slide-in">
+        <span class="table-badge">Table 12 · demo</span>
+        <div class="qr" data-qr="order.html?t=12" aria-label="QR code to order for table 12"></div>
+        <small>Scan with your phone, or <a href="order.html?t=12" style="color:var(--c-terracotta);font-weight:600">open the demo order page</a>.</small>
+      </div>
+    </div>
+  </section>
+
   <!-- ============================ CTA ============================ -->
   <section class="section cta-band">
     <div class="container">
@@ -177,6 +226,12 @@
       <p class="lead" style="margin:1rem auto 0;color:rgba(255,250,247,0.85)">Walk-ins are always welcome, but weekend brunch fills fast.</p>
       <a class="btn btn--cream" href="contact.html">Book a table</a>
     </div>
+  </section>
+
+  <!-- ================== FULL-SCREEN HANDWRITING ================== -->
+  <section class="signature-overlay" aria-label="See you soon">
+    <h2 class="title-special title-special--cream">see you soon</h2>
+    <p>Made with love in Annecy</p>
   </section>
 
   <!-- ============================ FOOTER ============================ -->
@@ -229,7 +284,10 @@
   <script src="assets/js/vendor/opentype.min.js" defer></script>
   <script src="assets/js/vendor/gsap.min.js" defer></script>
   <script src="assets/js/vendor/ScrollTrigger.min.js" defer></script>
+  <script src="assets/js/vendor/qrcode-generator.js" defer></script>
   <script src="assets/js/main.js" defer></script>
   <script src="assets/js/handwriting.js" defer></script>
+  <script src="assets/js/scroll.js" defer></script>
+  <script src="assets/js/qr.js" defer></script>
 </body>
 </html>
