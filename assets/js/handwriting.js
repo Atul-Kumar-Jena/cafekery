@@ -1,28 +1,30 @@
 /* =============================================================
    HAVEN — handwriting "draw-in" for cursive headings
-   Robust GSAP text-stroke technique (no per-glyph font parsing):
-     each .title-special becomes an inline SVG <text> rendered in
-     the script font, drawn by tweening stroke-dashoffset from the
-     measured outline length to 0, then the ink fills in.
-   - Waits for the font to load before measuring (correct geometry).
-   - Dash length is measured per phrase, so timing is consistent
-     whether the text is "from 8am" or a full sentence.
-   - Plays once when scrolled into view (ScrollTrigger).
-   - Honours prefers-reduced-motion and degrades to plain styled
-     text if GSAP is unavailable.
+   Per-glyph, left-to-right writing with OpenType.js:
+     each .title-special is rebuilt as word spans of SVG glyph
+     paths; every character is drawn in reading order by tweening
+     stroke-dashoffset (CSS), with a small overlap so the pen
+     flows continuously — slow and deliberate, like Apple's boot
+     "hello". Triggers once on scroll.
+   Self-hosted font + library => no CDN dependency.
+   Falls back to the plain styled script text if the library is
+   unavailable, and shows the finished text under reduced-motion.
    ============================================================= */
 (function () {
   "use strict";
 
   var SELECTOR = ".title-special";
-  var SVG_NS = "http://www.w3.org/2000/svg";
+  var NS = "http://www.w3.org/2000/svg";
+  var FONT_URL = "assets/fonts/parisienne.ttf";
 
-  // ---- Feel ----
-  var STROKE_FACTOR = 2.4;  // advance-width -> approx outline length
-  var PEN_SPEED = 600;      // user-units per second (smaller = slower)
-  var MIN_DUR = 1.6;
-  var MAX_DUR = 7;
-  var EASE = "power1.inOut";
+  // ---- Feel (slow + deliberate, but flowing ~7-8s) ----
+  var INITIAL_DELAY = 0.3; // s before the first stroke
+  var EM_SECONDS = 0.42; // seconds to draw one em of path length (bigger = slower)
+  var DELAY_MULTIPLIER = 0.5; // <1 overlaps strokes for a continuous flowing hand
+  var WORD_GAP = 0.22; // extra delay (s) between words
+  var MIN_DUR = 0.36;
+  var MAX_DUR = 1.1;
+  var STROKE_RATIO = 0.03; // stroke width relative to glyph scale
 
   var nodes = document.querySelectorAll(SELECTOR);
   if (!nodes.length) return;
@@ -31,131 +33,140 @@
     window.matchMedia &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  var hasGSAP = typeof window.gsap !== "undefined";
+  // No library (e.g. blocked) -> keep the readable, styled script text.
+  if (typeof window.opentype === "undefined" || !window.fetch) return;
 
-  // No GSAP (e.g. blocked) -> leave the readable, styled script text.
-  if (!hasGSAP) return;
+  // Fetch + parse directly (more reliable than opentype.load across builds).
+  fetch(FONT_URL)
+    .then(function (resp) {
+      if (!resp.ok) throw new Error("font " + resp.status);
+      return resp.arrayBuffer();
+    })
+    .then(function (buf) {
+      var font = window.opentype.parse(buf);
+      if (font) init(font);
+    })
+    .catch(function () {
+      /* leave the styled fallback text in place */
+    });
 
-  if (window.ScrollTrigger) gsap.registerPlugin(window.ScrollTrigger);
+  function init(font) {
+    var io =
+      "IntersectionObserver" in window
+        ? new IntersectionObserver(
+            function (entries, obs) {
+              entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                  activate(entry.target);
+                  obs.unobserve(entry.target);
+                }
+              });
+            },
+            { threshold: 0.35 }
+          )
+        : null;
 
-  // Build the SVG shells immediately so layout is stable, then
-  // measure + animate once the font is ready.
-  var items = [];
-  nodes.forEach(function (el) {
-    items.push(buildShell(el));
-  });
-
-  var ready = document.fonts && document.fonts.ready
-    ? document.fonts.ready
-    : Promise.resolve();
-
-  // also explicitly request the script face so measuring is accurate
-  if (document.fonts && document.fonts.load) {
-    try { document.fonts.load("1em Sacramento"); } catch (e) {}
+    nodes.forEach(function (el) {
+      build(el, font);
+      if (reduce || !io) activate(el);
+      else io.observe(el);
+    });
   }
 
-  ready.then(function () {
-    // a frame later, glyph metrics are final
-    requestAnimationFrame(function () {
-      items.forEach(activate);
+  function activate(el) {
+    el.querySelectorAll(".handwriting-word").forEach(function (w) {
+      w.classList.add("is-active");
     });
-  });
+  }
 
-  /* ---------- build an inline SVG <text> for one heading ------- */
-  function buildShell(el) {
+  function build(el, font) {
     var text = (el.textContent || "").replace(/\s+/g, " ").trim();
+    if (!text) return;
+
     var cs = getComputedStyle(el);
-    var color = cs.color;
     var fontSize = parseFloat(cs.fontSize) || 80;
-    var strokeW = Math.max(1.4, fontSize / 60);
+    var scaled = (fontSize / 80) * 800; // large glyphs => crisp SVG
+    var strokeW = scaled * STROKE_RATIO;
+    var vbTop = -scaled * 0.4;
+    var vbH = scaled * 1.6;
+    var pxH = fontSize * 1.6;
 
     el.setAttribute("aria-label", text);
     el.textContent = "";
 
-    var svg = document.createElementNS(SVG_NS, "svg");
-    svg.setAttribute("class", "hw-svg");
-    svg.style.display = "inline-block";
-    svg.style.verticalAlign = "middle";
-    svg.style.overflow = "visible";
-    svg.style.maxWidth = "100%";
+    var delay = INITIAL_DELAY;
+    var words = text.split(" ");
 
-    var t = document.createElementNS(SVG_NS, "text");
-    t.setAttribute("x", "0");
-    t.setAttribute("y", "0");
-    t.style.fontFamily = cs.fontFamily;
-    t.style.fontSize = fontSize + "px";
-    t.style.fontWeight = cs.fontWeight;
-    t.style.fill = "transparent";
-    t.style.stroke = color;
-    t.style.strokeWidth = strokeW + "px";
-    t.style.strokeLinecap = "round";
-    t.style.strokeLinejoin = "round";
-    t.textContent = text;
+    words.forEach(function (word, wi) {
+      var span = document.createElement("span");
+      span.className = "handwriting-word";
+      span.style.verticalAlign = "middle";
+      span.style.marginRight = "0.14em";
 
-    svg.appendChild(t);
-    el.appendChild(svg);
-    return { el: el, svg: svg, text: t, color: color, fontSize: fontSize };
+      var svg = document.createElementNS(NS, "svg");
+      var x = 10;
+      var baseline = scaled * 0.78;
+
+      for (var i = 0; i < word.length; i++) {
+        var ch = word[i];
+        var glyph = font.charToGlyph(ch);
+        var path = font.getPath(ch, x, baseline, scaled);
+        var d = path.toPathData(2);
+
+        var p = document.createElementNS(NS, "path");
+        p.setAttribute("d", d);
+        p.setAttribute("class", "draw-path");
+        p.style.strokeWidth = strokeW.toFixed(1) + "px";
+
+        var len = measure(p, d);
+        var dur = Math.min(
+          MAX_DUR,
+          Math.max(MIN_DUR, (len / font.unitsPerEm) * EM_SECONDS)
+        );
+
+        p.style.setProperty("--l", len.toFixed(2));
+        p.style.setProperty("--t", dur.toFixed(2) + "s");
+        p.style.setProperty("--d", delay.toFixed(3) + "s");
+
+        x += (glyph.advanceWidth * scaled) / font.unitsPerEm;
+        delay += DELAY_MULTIPLIER * dur;
+
+        svg.appendChild(p);
+      }
+
+      var totalAdv = x + 10;
+      svg.setAttribute("viewBox", "0 " + vbTop + " " + totalAdv + " " + vbH);
+      svg.setAttribute("preserveAspectRatio", "xMinYMid meet");
+      svg.style.display = "block";
+      svg.style.height = pxH + "px";
+      svg.style.width = pxH * (totalAdv / vbH) + "px";
+      svg.style.maxWidth = "100%";
+      svg.style.overflow = "visible";
+
+      span.appendChild(svg);
+      el.appendChild(span);
+
+      if (wi < words.length - 1) delay += DELAY_MULTIPLIER * WORD_GAP;
+    });
   }
 
-  /* ---------- measure, size, and wire up the draw ------------- */
-  function activate(it) {
-    var t = it.svg.firstChild ? it.text : null;
-    if (!t) return;
-
-    // size the viewBox to the rendered text bounding box
-    var bb;
-    try { bb = t.getBBox(); } catch (e) { bb = null; }
-    if (!bb || !bb.width) {
-      // measuring failed -> show plain filled text as a fallback
-      t.style.fill = it.color;
-      t.style.stroke = "none";
-      return;
+  // getTotalLength needs measuring; works on detached nodes in most
+  // engines, with a temp-SVG fallback.
+  function measure(node, d) {
+    if (typeof node.getTotalLength === "function") {
+      try {
+        var n = node.getTotalLength();
+        if (n) return n;
+      } catch (e) {}
     }
-    var pad = it.fontSize * 0.22;
-    it.svg.setAttribute(
-      "viewBox",
-      (bb.x - pad) + " " + (bb.y - pad) + " " +
-      (bb.width + pad * 2) + " " + (bb.height + pad * 2)
-    );
-    it.svg.style.width = bb.width + pad * 2 + "px";
-    it.svg.style.height = bb.height + pad * 2 + "px";
-
-    // approximate the outline length from the advance width
-    var advance = 0;
-    try { advance = t.getComputedTextLength(); } catch (e) {}
-    var len = (advance || bb.width) * STROKE_FACTOR;
-    var dur = Math.min(MAX_DUR, Math.max(MIN_DUR, len / PEN_SPEED));
-
-    t.style.strokeDasharray = len;
-    t.style.strokeDashoffset = len;
-
-    if (reduce) {
-      // no motion: just show the finished, inked word
-      t.style.strokeDashoffset = 0;
-      t.style.fill = it.color;
-      return;
-    }
-
-    var play = function () {
-      var tl = gsap.timeline();
-      tl.to(t, { strokeDashoffset: 0, duration: dur, ease: EASE });
-      // ink fills in just behind the pen for a pen-to-paper finish
-      tl.to(
-        t,
-        { fill: it.color, duration: 1.1, ease: "power2.out" },
-        "-=0.6"
-      );
-    };
-
-    if (window.ScrollTrigger) {
-      window.ScrollTrigger.create({
-        trigger: it.el,
-        start: "top 85%",
-        once: true,
-        onEnter: play,
-      });
-    } else {
-      play();
-    }
+    var tmp = document.createElementNS(NS, "svg");
+    tmp.setAttribute("style", "position:absolute;width:0;height:0;overflow:hidden");
+    var tp = document.createElementNS(NS, "path");
+    tp.setAttribute("d", d);
+    tmp.appendChild(tp);
+    document.body.appendChild(tmp);
+    var l = tp.getTotalLength();
+    document.body.removeChild(tmp);
+    return l;
   }
 })();

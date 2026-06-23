@@ -23,11 +23,11 @@
   src: url("../fonts/archivo-latin-wght-italic.woff2") format("woff2");
 }
 @font-face {
-  font-family: "Sacramento";
+  font-family: "Parisienne";
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("../fonts/sacramento-latin-400-normal.woff2") format("woff2");
+  src: url("../fonts/parisienne.ttf") format("truetype");
 }
 
 :root {
@@ -42,7 +42,7 @@
   --c-white: #ffffff;
 
   --font-sans: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-script: "Sacramento", "Brush Script MT", cursive;
+  --font-script: "Parisienne", "Snell Roundhand", "Brush Script MT", cursive;
 
   --maxw: 1340px;
   --gutter: clamp(1.25rem, 4vw, 4rem);
