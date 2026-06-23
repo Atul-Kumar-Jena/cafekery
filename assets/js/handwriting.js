@@ -16,9 +16,15 @@
   // OpenType.js can parse — stands in for the original "With Hearty".
   var FONT_URL =
     "https://cdn.jsdelivr.net/gh/google/fonts/ofl/sacramento/Sacramento-Regular.ttf";
-  var DELAY_MULTIPLIER = 0.65; // controls overlap between strokes
-  var INITIAL_DELAY = 0.1; // seconds before the first stroke
-  var SPEED_DIVISOR = 1600; // larger = slower drawing
+  // ---- Timing (tuned for a slow, deliberate "Apple boot" feel) ----
+  // Each character is drawn at a gentle, even pen-speed; the next
+  // character starts before the previous finishes (overlap) so the
+  // line flows continuously instead of stop-starting.
+  var INITIAL_DELAY = 0.25; // seconds before the first stroke
+  var SPEED_DIVISOR = 620; // SMALLER = slower pen (duration = length / divisor)
+  var MIN_DURATION = 0.5; // floor so tiny strokes still read as "drawn"
+  var MAX_DURATION = 1.5; // cap so long strokes don't crawl
+  var DELAY_MULTIPLIER = 0.5; // <1 overlaps strokes for a continuous flow
 
   var targets = document.querySelectorAll(SELECTOR);
   if (!targets.length) return;
@@ -86,7 +92,10 @@
         p.setAttribute("class", "draw-path");
 
         var len = getPathLength(p, data);
-        var duration = Math.max(0.18, len / SPEED_DIVISOR);
+        var duration = Math.min(
+          MAX_DURATION,
+          Math.max(MIN_DURATION, len / SPEED_DIVISOR)
+        );
 
         p.style.setProperty("--l", len.toFixed(2));
         p.style.setProperty("--t", duration.toFixed(2) + "s");

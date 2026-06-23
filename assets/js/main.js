@@ -152,6 +152,49 @@
     }
   }
 
+  /* ---- Background line-art: slow, gentle draw-in -----------
+     Measure the real path length so the draw completes exactly,
+     then ease it on over ~9s. Visible by default for no-JS. ---- */
+  var linePath = document.querySelector(".lineart path");
+  if (linePath && typeof linePath.getTotalLength === "function") {
+    var reduceLine = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!reduceLine) {
+      try {
+        var total = linePath.getTotalLength();
+        linePath.style.strokeDasharray = total;
+        linePath.style.strokeDashoffset = total;
+        // next frame: transition offset back to 0 (draws the line)
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            linePath.style.transition =
+              "stroke-dashoffset 9s cubic-bezier(0.33, 0, 0.2, 1) 0.4s";
+            linePath.style.strokeDashoffset = "0";
+          });
+        });
+      } catch (e) {
+        /* leave it visible */
+      }
+    }
+  }
+
+  /* ---- Back-to-top (injected, no per-page markup) ---------- */
+  var toTop = document.createElement("button");
+  toTop.className = "to-top";
+  toTop.type = "button";
+  toTop.setAttribute("aria-label", "Back to top");
+  toTop.innerHTML =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  document.body.appendChild(toTop);
+  toTop.addEventListener("click", function () {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+  var toggleToTop = function () {
+    if (window.scrollY > 700) toTop.classList.add("is-shown");
+    else toTop.classList.remove("is-shown");
+  };
+  window.addEventListener("scroll", toggleToTop, { passive: true });
+  toggleToTop();
+
   /* ---- Form handling (front-end demo) ---------------------- */
   document.querySelectorAll("form[data-demo]").forEach(function (form) {
     form.addEventListener("submit", function (e) {
