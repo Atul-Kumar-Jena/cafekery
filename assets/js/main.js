@@ -152,25 +152,34 @@
     }
   }
 
-  /* ---- Hero line-art: gentle draw-in on load --------------- */
+  /* ---- Hero line-art: reliable draw-in on load ------------- */
   var linePath = document.querySelector(".lineart path");
   if (linePath && typeof linePath.getTotalLength === "function") {
     var reduceLine = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!reduceLine) {
-      try {
-        var total = linePath.getTotalLength();
-        linePath.style.strokeDasharray = total;
+    try {
+      var total = linePath.getTotalLength();
+      linePath.style.strokeDasharray = total;
+      if (reduceLine) {
+        linePath.style.strokeDashoffset = 0;
+      } else if (window.gsap) {
+        linePath.style.strokeDashoffset = total;
+        window.gsap.to(linePath, {
+          strokeDashoffset: 0,
+          duration: 6,
+          ease: "power1.inOut",
+          delay: 0.3,
+        });
+      } else {
         linePath.style.strokeDashoffset = total;
         requestAnimationFrame(function () {
           requestAnimationFrame(function () {
-            linePath.style.transition =
-              "stroke-dashoffset 6.5s cubic-bezier(0.4, 0, 0.15, 1) 0.3s";
+            linePath.style.transition = "stroke-dashoffset 6s ease 0.3s";
             linePath.style.strokeDashoffset = "0";
           });
         });
-      } catch (e) {
-        /* leave it visible */
       }
+    } catch (e) {
+      linePath.style.strokeDashoffset = 0;
     }
   }
 

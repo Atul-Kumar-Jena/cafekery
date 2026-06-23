@@ -878,8 +878,8 @@ body.noScroll .buttonToggleNavAside span:nth-child(3) { transform: translateY(-7
 
 @media (max-width: 768px) {
   .hview { height: auto; overflow: visible; }
-  .hview__track { flex-direction: column; width: auto; }
-  .hpanel { width: 100%; flex: none; height: auto; min-height: 78vh; padding-block: 4rem; }
+  .hview__track { flex-direction: column; width: auto; height: auto; transform: none !important; }
+  .hpanel { width: 100%; flex: none; height: auto; min-height: 70vh; padding-block: 4rem; }
   .hview__hint { display: none; }
 }
 
@@ -969,18 +969,22 @@ body.noScroll .buttonToggleNavAside span:nth-child(3) { transform: translateY(-7
 .ticket__done { margin-top: 0.9rem; width: 100%; }
 .kds-empty { color: var(--c-cocoa-soft); margin-top: 2rem; }
 
-/* ---- Pen-mask reveal for filled handwriting -------------- */
-.hw-pen {
-  fill: none;
-  stroke: #fff; /* white = "revealed" inside the mask */
+/* ---- Pen draws each letter; ink fills in just behind it --- */
+.hw-stroke {
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-dasharray: var(--l);
   stroke-dashoffset: var(--l);
 }
-.handwriting-word.is-active .hw-pen {
-  animation: drawLine var(--t) linear var(--d) forwards;
+.handwriting-word.is-active .hw-stroke {
+  animation: drawLine var(--t) ease var(--d) forwards;
 }
+.hw-ink { opacity: 0; }
+.handwriting-word.is-active .hw-ink {
+  animation: inkFill var(--ft) ease var(--fd) forwards;
+}
+@keyframes inkFill { to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
-  .hw-pen { stroke-dashoffset: 0; animation: none; }
+  .hw-stroke { stroke-dashoffset: 0; animation: none; }
+  .hw-ink { opacity: 1; animation: none; }
 }

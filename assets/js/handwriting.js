@@ -1,14 +1,13 @@
 /* =============================================================
    HAVEN — handwriting "write-on" for cursive headings
-   FILLED + pen-drawn: each .title-special is rebuilt per glyph with
-   OpenType.js. Every letter is a SOLID fill, revealed by a thick
-   pen stroke travelling along the glyph (an SVG mask whose
-   stroke-dashoffset animates). The ink therefore appears as if
-   written by a pen, in reading order — and stays solid and legible
-   (no hollow outlines, no double lines).
-   Self-hosted font + library => no CDN dependency. Falls back to
-   the plain styled script text without the library; reduced-motion
-   shows the finished, filled text.
+   You SEE a pen draw each letter (a stroke traced left-to-right,
+   per glyph, in reading order), and solid ink fills in just behind
+   the pen — so the finished word is solid and legible (filled),
+   but the motion reads as real handwriting, not a wipe.
+   OpenType.js (self-hosted) gives per-glyph order; the font + lib
+   are local, so there's no CDN dependency. Falls back to plain
+   styled script text without the library; reduced-motion shows the
+   finished, filled text.
    ============================================================= */
 (function () {
   "use strict";
@@ -17,14 +16,15 @@
   var NS = "http://www.w3.org/2000/svg";
   var FONT_URL = "assets/fonts/parisienne.ttf";
 
-  // ---- Feel (deliberate, flowing) ----
-  var INITIAL_DELAY = 0.35;
-  var EM_SECONDS = 0.5;       // seconds to draw one em of pen length
-  var DELAY_MULTIPLIER = 0.55; // <1 overlaps strokes -> continuous hand
+  // ---- Feel ----
+  var INITIAL_DELAY = 0.3;
+  var EM_SECONDS = 0.5;        // pen speed (seconds per em of path)
+  var DELAY_MULTIPLIER = 0.58; // overlap between letters
   var WORD_GAP = 0.22;
   var MIN_DUR = 0.34;
-  var MAX_DUR = 1.05;
-  var PEN_RATIO = 0.085;      // pen thickness relative to glyph scale
+  var MAX_DUR = 1.0;
+  var PEN_RATIO = 0.022;       // thin pen line
+  var INK_LAG = 0.45;          // ink starts at this fraction of a glyph's draw
 
   var nodes = document.querySelectorAll(SELECTOR);
   if (!nodes.length) return;
@@ -41,8 +41,6 @@
       if (font) init(font);
     })
     .catch(function () { /* keep styled fallback text */ });
-
-  var uid = 0;
 
   function init(font) {
     var io =
@@ -93,14 +91,6 @@
       span.style.marginRight = "0.12em";
 
       var svg = document.createElementNS(NS, "svg");
-      var maskId = "hwmask" + ++uid;
-      var defs = document.createElementNS(NS, "defs");
-      var mask = document.createElementNS(NS, "mask");
-      mask.setAttribute("id", maskId);
-      mask.setAttribute("maskUnits", "userSpaceOnUse");
-      var g = document.createElementNS(NS, "g");
-      g.setAttribute("mask", "url(#" + maskId + ")");
-
       var x = 10;
       var baseline = scaled * 0.78;
 
@@ -109,48 +99,45 @@
         var glyph = font.charToGlyph(ch);
         var d = font.getPath(ch, x, baseline, scaled).toPathData(2);
 
-        // solid ink
-        var fill = document.createElementNS(NS, "path");
-        fill.setAttribute("d", d);
-        fill.setAttribute("fill", color);
-        g.appendChild(fill);
-
-        // pen that reveals it (white stroke in the mask)
-        var pen = document.createElementNS(NS, "path");
-        pen.setAttribute("d", d);
-        pen.setAttribute("class", "hw-pen");
-        pen.style.strokeWidth = penW.toFixed(1) + "px";
         var len = measure(d);
         var dur = Math.min(MAX_DUR, Math.max(MIN_DUR, (len / font.unitsPerEm) * EM_SECONDS));
+
+        // solid ink, fades in just behind the pen
+        var ink = document.createElementNS(NS, "path");
+        ink.setAttribute("d", d);
+        ink.setAttribute("class", "hw-ink");
+        ink.setAttribute("fill", color);
+        ink.style.setProperty("--fd", (delay + dur * INK_LAG).toFixed(3) + "s");
+        ink.style.setProperty("--ft", Math.max(0.3, dur * 0.85).toFixed(2) + "s");
+        svg.appendChild(ink);
+
+        // the pen line that draws the letter
+        var pen = document.createElementNS(NS, "path");
+        pen.setAttribute("d", d);
+        pen.setAttribute("class", "hw-stroke");
+        pen.setAttribute("fill", "none");
+        pen.setAttribute("stroke", color);
+        pen.style.strokeWidth = penW.toFixed(1) + "px";
         pen.style.setProperty("--l", len.toFixed(2));
         pen.style.setProperty("--t", dur.toFixed(2) + "s");
         pen.style.setProperty("--d", delay.toFixed(3) + "s");
-        mask.appendChild(pen);
+        svg.appendChild(pen);
 
         x += (glyph.advanceWidth * scaled) / font.unitsPerEm;
         delay += DELAY_MULTIPLIER * dur;
       }
 
-      defs.appendChild(mask);
-      svg.appendChild(defs);
-      svg.appendChild(g);
       span.appendChild(svg);
       el.appendChild(span);
 
-      // size to the rendered glyphs (g must be in the DOM to measure)
+      // size to the rendered glyphs
       var bb;
-      try { bb = g.getBBox(); } catch (e) { bb = null; }
+      try { bb = svg.getBBox(); } catch (e) { bb = null; }
       var pad = scaled * 0.22;
       var vbx = bb ? bb.x - pad : 0;
       var vby = bb ? bb.y - pad : -scaled * 0.4;
       var vbw = bb ? bb.width + pad * 2 : x + 10;
       var vbh = bb ? bb.height + pad * 2 : scaled * 1.6;
-
-      mask.setAttribute("x", vbx);
-      mask.setAttribute("y", vby);
-      mask.setAttribute("width", vbw);
-      mask.setAttribute("height", vbh);
-
       svg.setAttribute("viewBox", vbx + " " + vby + " " + vbw + " " + vbh);
       svg.setAttribute("preserveAspectRatio", "xMinYMid meet");
       svg.style.display = "block";
