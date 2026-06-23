@@ -14,17 +14,17 @@
 
   var SELECTOR = ".title-special";
   var NS = "http://www.w3.org/2000/svg";
-  var FONT_URL = "assets/fonts/parisienne.ttf";
+  var FONT_URL = "assets/fonts/dancingscript.ttf";
 
-  // ---- Feel ----
-  var INITIAL_DELAY = 0.3;
-  var EM_SECONDS = 0.5;        // pen speed (seconds per em of path)
-  var DELAY_MULTIPLIER = 0.58; // overlap between letters
-  var WORD_GAP = 0.22;
-  var MIN_DUR = 0.34;
-  var MAX_DUR = 1.0;
-  var PEN_RATIO = 0.022;       // thin pen line
-  var INK_LAG = 0.45;          // ink starts at this fraction of a glyph's draw
+  // ---- Feel (gradual, defined) ----
+  var INITIAL_DELAY = 0.25;
+  var EM_SECONDS = 0.42;       // pen speed (seconds per em of path)
+  var DELAY_MULTIPLIER = 0.5;  // overlap between letters (flowing)
+  var WORD_GAP = 0.2;
+  var MIN_DUR = 0.3;
+  var MAX_DUR = 0.95;
+  var PEN_RATIO = 0.03;        // a more defined pen line
+  var INK_LAG = 0.4;           // ink fills just behind the pen
 
   var nodes = document.querySelectorAll(SELECTOR);
   if (!nodes.length) return;
@@ -130,21 +130,24 @@
       span.appendChild(svg);
       el.appendChild(span);
 
-      // size to the rendered glyphs
+      // Width is per-word, but the VERTICAL box is fixed for every word
+      // (based on the font baseline) so all words share one baseline and
+      // line up. Tall flourishes overflow visibly rather than shifting.
       var bb;
       try { bb = svg.getBBox(); } catch (e) { bb = null; }
-      var pad = scaled * 0.22;
-      var vbx = bb ? bb.x - pad : 0;
-      var vby = bb ? bb.y - pad : -scaled * 0.4;
-      var vbw = bb ? bb.width + pad * 2 : x + 10;
-      var vbh = bb ? bb.height + pad * 2 : scaled * 1.6;
-      svg.setAttribute("viewBox", vbx + " " + vby + " " + vbw + " " + vbh);
+      var padX = scaled * 0.10;
+      var vbX = bb ? bb.x - padX : 0;
+      var vbW = bb ? bb.width + padX * 2 : x + 10;
+      var vbY = -scaled * 0.22;   // room above the baseline (ascenders/loops)
+      var vbH = scaled * 1.30;    // baseline (0.78) + descenders + padding
+      svg.setAttribute("viewBox", vbX + " " + vbY + " " + vbW + " " + vbH);
       svg.setAttribute("preserveAspectRatio", "xMinYMid meet");
       svg.style.display = "block";
-      svg.style.height = fontSize * (vbh / scaled) + "px";
-      svg.style.width = fontSize * (vbw / scaled) + "px";
+      svg.style.height = fontSize * (vbH / scaled) + "px";
+      svg.style.width = fontSize * (vbW / scaled) + "px";
       svg.style.maxWidth = "100%";
       svg.style.overflow = "visible";
+      span.style.verticalAlign = "top";
 
       if (wi < words.length - 1) delay += DELAY_MULTIPLIER * WORD_GAP;
     });

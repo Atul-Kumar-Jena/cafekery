@@ -37,14 +37,20 @@
                 "M50 46 C42 43 37 36 36 28 M50 46 C58 43 63 36 64 28";
     var CROISSANT = "M18 66 C30 40 70 40 82 66 C64 55 36 55 18 66 Z M32 60 C44 53 56 53 68 60";
 
+    // Each doodle is anchored to a real section so it's reliably
+    // visible and draws gradually as that section scrolls in (robust
+    // even with the pinned side-scroll changing scroll mapping).
     var doodles = [
-      { d: HEART, x: 0.10, y: 0.30, s: 0.8 },
-      { d: COFFEE, x: 0.89, y: 0.47, s: 0.85 },
-      { d: SPRIG, x: 0.10, y: 0.64, s: 0.85 },
-      { d: CROISSANT, x: 0.89, y: 0.82, s: 0.9 },
+      { d: HEART, sel: "#spring", xf: 0.84, yo: 0.20, s: 0.9 },
+      { d: SPRIG, sel: "#menu", xf: 0.90, yo: 0.12, s: 0.85 },
+      { d: COFFEE, sel: "#coffee-intro", xf: 0.13, yo: 0.28, s: 0.95 },
+      { d: CROISSANT, sel: "#order", xf: 0.12, yo: 0.30, s: 0.95 },
     ];
 
-    var svg, tl;
+    var svg, sts = [];
+
+    function docTop(el) { var y = 0; while (el) { y += el.offsetTop; el = el.offsetParent; } return y; }
+    function clearST() { sts.forEach(function (s) { try { s.kill(); } catch (e) {} }); sts = []; }
 
     function snake(w, y0, y1) {
       var amp = Math.min(w * 0.26, 300);
@@ -63,8 +69,8 @@
     }
 
     function build() {
+      clearST();
       if (svg) svg.remove();
-      if (tl) { if (tl.scrollTrigger) tl.scrollTrigger.kill(); tl.kill(); tl = null; }
 
       var w = window.innerWidth;
       var h = Math.max(document.documentElement.scrollHeight, window.innerHeight);
@@ -78,23 +84,31 @@
       svg.setAttribute("aria-hidden", "true");
 
       var main = document.createElementNS(NS, "path");
-      main.setAttribute("d", snake(w, vh * 0.88, h - vh * 0.35));
+      main.setAttribute("d", snake(w, vh * 0.9, h - vh * 0.3));
       svg.appendChild(main);
       document.body.appendChild(svg);
 
       var mlen = main.getTotalLength();
       main.style.strokeDasharray = mlen;
       main.style.strokeDashoffset = reduce ? 0 : mlen;
+      if (!reduce) {
+        var mt = gsap.to(main, {
+          strokeDashoffset: 0,
+          ease: "none",
+          scrollTrigger: { trigger: document.body, start: "top top", end: "bottom bottom", scrub: 1, invalidateOnRefresh: true },
+        });
+        sts.push(mt.scrollTrigger);
+      }
 
-      var built = [];
       doodles.forEach(function (dd) {
-        var size = Math.min(w, 560) * 0.16 * dd.s;
+        var el = document.querySelector(dd.sel);
+        if (!el) return;
+        var size = Math.max(74, Math.min(170, w * 0.2 * dd.s));
+        var px = w * dd.xf;
+        var py = docTop(el) + (el.offsetHeight || vh) * dd.yo;
         var g = document.createElementNS(NS, "g");
-        g.setAttribute(
-          "transform",
-          "translate(" + (w * dd.x - size / 2).toFixed(1) + "," + (h * dd.y - size / 2).toFixed(1) +
-          ") scale(" + (size / 100).toFixed(3) + ")"
-        );
+        g.setAttribute("transform",
+          "translate(" + (px - size / 2).toFixed(1) + "," + (py - size / 2).toFixed(1) + ") scale(" + (size / 100).toFixed(3) + ")");
         var p = document.createElementNS(NS, "path");
         p.setAttribute("class", "doodle");
         p.setAttribute("d", dd.d);
@@ -103,32 +117,23 @@
         var l = p.getTotalLength();
         p.style.strokeDasharray = l;
         p.style.strokeDashoffset = reduce ? 0 : l;
-        built.push({ p: p, l: l, pos: Math.max(0.03, Math.min(0.95, (h * dd.y) / h)) });
-      });
-
-      if (reduce) return;
-
-      tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: document.body,
-          start: "top top",
-          end: "bottom bottom",
-          scrub: 1,
-          invalidateOnRefresh: true,
-        },
-      });
-      tl.fromTo(main, { strokeDashoffset: mlen }, { strokeDashoffset: 0, ease: "none", duration: 1 }, 0);
-      built.forEach(function (b) {
-        tl.fromTo(b.p, { strokeDashoffset: b.l }, { strokeDashoffset: 0, ease: "none", duration: 0.05 }, b.pos);
+        if (!reduce) {
+          var dt = gsap.to(p, {
+            strokeDashoffset: 0,
+            ease: "power1.inOut", // gradual draw
+            scrollTrigger: { trigger: el, start: "top 80%", end: "top 32%", scrub: true, invalidateOnRefresh: true },
+          });
+          sts.push(dt.scrollTrigger);
+        }
       });
     }
 
     build();
+    // Rebuild after layout settles (fonts/images + the pin that adds
+    // scroll height) so the path spans the real page height.
+    window.addEventListener("load", function () { setTimeout(build, 200); });
     var rt;
-    window.addEventListener("resize", function () {
-      clearTimeout(rt);
-      rt = setTimeout(build, 300);
-    });
+    window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(build, 300); });
   })();
 
   /* ---- The View: horizontal side-scroll --------------------- */

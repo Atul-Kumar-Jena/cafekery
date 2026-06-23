@@ -29,6 +29,13 @@
   font-display: swap;
   src: url("../fonts/parisienne.ttf") format("truetype");
 }
+@font-face {
+  font-family: "Dancing Script";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../fonts/dancingscript.ttf") format("truetype");
+}
 
 :root {
   --c-terracotta: #c1643b;
@@ -43,6 +50,7 @@
 
   --font-sans: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-script: "Parisienne", "Snell Roundhand", "Brush Script MT", cursive;
+  --font-hand: "Dancing Script", "Segoe Script", "Brush Script MT", cursive;
 
   --maxw: 1340px;
   --gutter: clamp(1.25rem, 4vw, 4rem);
@@ -200,11 +208,11 @@ h1, h2, h3, h4 { line-height: 1.05; letter-spacing: -0.01em; font-weight: 800; }
    fallback until JS swaps it for drawn SVG strokes.
    ============================================================= */
 .title-special {
-  font-family: var(--font-script);
+  font-family: var(--font-hand);
   color: var(--c-terracotta);
-  font-size: clamp(2.8rem, 9vw, 7rem);
-  line-height: 0.9;
-  font-weight: 400;
+  font-size: clamp(2.6rem, 8vw, 6.4rem);
+  line-height: 0.95;
+  font-weight: 600;
 }
 .title-special--cream { color: var(--c-cream); }
 
@@ -1000,14 +1008,14 @@ body.noScroll .buttonToggleNavAside span:nth-child(3) { transform: translateY(-7
 }
 .lineart-scroll path {
   fill: none;
-  stroke: #d39b66;
-  stroke-width: 2.4;
+  stroke: #cf8f54;
+  stroke-width: 2.8;
   stroke-linecap: round;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke; /* constant thickness at any scale */
-  opacity: 0.62;
+  opacity: 0.72;
 }
-.lineart-scroll .doodle { opacity: 0.7; }
+.lineart-scroll .doodle { opacity: 0.92; stroke-width: 3.2; }
 @media (prefers-reduced-motion: reduce) {
   .lineart-scroll path { stroke-dashoffset: 0 !important; }
 }
