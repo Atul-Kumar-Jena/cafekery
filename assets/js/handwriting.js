@@ -1,143 +1,146 @@
 /* =============================================================
    HAVEN — handwriting "write-on" for cursive headings
-   Renders each WORD as real text (so connected cursive letters
-   join correctly — no glitching/overlap), then reveals it
-   left-to-right with a clip, word by word, in reading order.
-   Solid + defined; plays once on scroll (never scrubbed) so it
-   stays smooth during fast scrolling. Falls back to plain styled
-   text without GSAP; reduced-motion shows the finished text.
+   Per-glyph PEN STROKE: each .title-special is rebuilt with
+   OpenType.js as word spans of SVG glyph paths, and every letter
+   is DRAWN in reading order (stroke-dashoffset), so it reads as a
+   pen writing — not a wipe/unveil. Uses Caveat, a monoline
+   handwriting font whose letters don't fuse, so per-glyph drawing
+   stays clean (no overlap/glitch, no double lines). Every word
+   shares one vertical box, so the line sits on a single baseline.
+   Self-hosted font + lib (no CDN). Falls back to plain styled text
+   without the library; reduced-motion shows the finished text.
    ============================================================= */
 (function () {
   "use strict";
 
   var SELECTOR = ".title-special";
   var NS = "http://www.w3.org/2000/svg";
+  var FONT_URL = "assets/fonts/caveat.ttf";
 
-  var WORD_DUR = 0.75;     // seconds to sweep one word
-  var WORD_STAGGER = 0.42; // gap between words
-  var INITIAL = 0.12;
-  var EASE = "power2.inOut";
+  // ---- Feel (genuine handwriting pace) ----
+  var INITIAL_DELAY = 0.18;
+  var EM_SECONDS = 0.55;       // pen speed (seconds per em of stroke length)
+  var DELAY_MULTIPLIER = 0.62; // overlap between letters (flowing)
+  var WORD_GAP = 0.22;
+  var MIN_DUR = 0.28;
+  var MAX_DUR = 0.95;
+  var PEN_RATIO = 0.05;        // stroke width relative to glyph scale
 
   var nodes = document.querySelectorAll(SELECTOR);
   if (!nodes.length) return;
 
   var reduce =
     window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var hasGSAP = typeof window.gsap !== "undefined";
 
-  // Wait until the script font is ACTUALLY loaded before measuring, or
-  // getBBox sizes the boxes for the fallback font and the text distorts
-  // when the real font swaps in (very visible on slower mobile loads).
+  if (typeof window.opentype === "undefined" || !window.fetch) return;
+
+  // wait for the webfont (so the static fallback matches), then parse
   var waits = [];
   if (document.fonts && document.fonts.load) {
-    try { waits.push(document.fonts.load('600 1em "Dancing Script"')); } catch (e) {}
+    try { waits.push(document.fonts.load('600 1em "Caveat"')); } catch (e) {}
   }
-  if (document.fonts && document.fonts.ready) waits.push(document.fonts.ready);
-
   Promise.all(waits).catch(function () {}).then(function () {
-    requestAnimationFrame(function () { nodes.forEach(build); });
+    fetch(FONT_URL)
+      .then(function (r) { if (!r.ok) throw 0; return r.arrayBuffer(); })
+      .then(function (buf) { var f = window.opentype.parse(buf); if (f) init(f); })
+      .catch(function () {});
   });
 
-  var uid = 0;
+  function init(font) {
+    var io =
+      "IntersectionObserver" in window
+        ? new IntersectionObserver(function (entries, obs) {
+            entries.forEach(function (e) {
+              if (e.isIntersecting) { activate(e.target); obs.unobserve(e.target); }
+            });
+          }, { threshold: 0.3 })
+        : null;
+    nodes.forEach(function (el) {
+      build(el, font);
+      if (reduce || !io) activate(el);
+      else io.observe(el);
+    });
+  }
 
-  function build(el) {
+  function activate(el) {
+    el.querySelectorAll(".handwriting-word").forEach(function (w) {
+      w.classList.add("is-active");
+    });
+  }
+
+  function build(el, font) {
     var text = (el.textContent || "").replace(/\s+/g, " ").trim();
     if (!text) return;
 
     var cs = getComputedStyle(el);
-    var color = cs.color;
     var fontSize = parseFloat(cs.fontSize) || 80;
-    var weight = cs.fontWeight;
-    var family = cs.fontFamily;
+    var scaled = (fontSize / 80) * 800;
+    var penW = scaled * PEN_RATIO;
+
+    // one shared vertical box -> one baseline for every word
+    var baseline = scaled * 0.74;
+    var vbY = -scaled * 0.34;
+    var vbH = scaled * 1.34;
 
     el.setAttribute("aria-label", text);
     el.textContent = "";
 
-    // shared vertical box so every word sits on one baseline
-    var vbY = -fontSize * 0.95;
-    var vbH = fontSize * 1.55;
-    var padX = fontSize * 0.1;
+    var delay = INITIAL_DELAY;
+    var words = text.split(" ");
 
-    var rects = [];
-
-    text.split(" ").forEach(function (word) {
+    words.forEach(function (word, wi) {
       var span = document.createElement("span");
       span.className = "handwriting-word";
       span.style.verticalAlign = "top";
-      span.style.marginRight = "0.26em";
+      span.style.marginRight = "0.16em";
 
       var svg = document.createElementNS(NS, "svg");
-      var id = "hwclip" + ++uid;
-      var defs = document.createElementNS(NS, "defs");
-      var clip = document.createElementNS(NS, "clipPath");
-      clip.setAttribute("id", id);
-      clip.setAttribute("clipPathUnits", "userSpaceOnUse");
-      var rect = document.createElementNS(NS, "rect");
-      clip.appendChild(rect);
-      defs.appendChild(clip);
+      var x = 6;
 
-      var t = document.createElementNS(NS, "text");
-      t.setAttribute("x", "0");
-      t.setAttribute("y", "0");
-      t.style.fontFamily = family;
-      t.style.fontSize = fontSize + "px";
-      t.style.fontWeight = weight;
-      t.style.fill = color;
-      t.setAttribute("clip-path", "url(#" + id + ")");
-      t.textContent = word;
+      for (var i = 0; i < word.length; i++) {
+        var ch = word[i];
+        var glyph = font.charToGlyph(ch);
+        var d = font.getPath(ch, x, baseline, scaled).toPathData(2);
+        var p = document.createElementNS(NS, "path");
+        p.setAttribute("d", d);
+        p.setAttribute("class", "draw-path");
+        p.style.strokeWidth = penW.toFixed(1) + "px";
+        var len = measure(d);
+        var dur = Math.min(MAX_DUR, Math.max(MIN_DUR, (len / font.unitsPerEm) * EM_SECONDS));
+        p.style.setProperty("--l", len.toFixed(2));
+        p.style.setProperty("--t", dur.toFixed(2) + "s");
+        p.style.setProperty("--d", delay.toFixed(3) + "s");
+        x += (glyph.advanceWidth * scaled) / font.unitsPerEm;
+        delay += DELAY_MULTIPLIER * dur;
+        svg.appendChild(p);
+      }
 
-      svg.appendChild(defs);
-      svg.appendChild(t);
-      span.appendChild(svg);
-      el.appendChild(span);
-
-      var bb;
-      try { bb = t.getBBox(); } catch (e) { bb = null; }
-      if (!bb || !bb.width) { t.removeAttribute("clip-path"); return; }
-
-      var vbX = bb.x - padX;
-      var vbW = bb.width + padX * 2;
-      svg.setAttribute("viewBox", vbX + " " + vbY + " " + vbW + " " + vbH);
+      var vbW = x + 6;
+      svg.setAttribute("viewBox", "0 " + vbY + " " + vbW + " " + vbH);
       svg.setAttribute("preserveAspectRatio", "xMinYMid meet");
       svg.style.display = "block";
-      svg.style.width = vbW + "px";
-      svg.style.height = "auto"; // derive from aspect -> never squishes if width is capped
+      svg.style.width = fontSize * (vbW / scaled) + "px";
+      svg.style.height = "auto"; // equals hPx when not width-capped; never squishes
       svg.style.maxWidth = "100%";
       svg.style.overflow = "visible";
 
-      rect.setAttribute("x", vbX);
-      rect.setAttribute("y", vbY);
-      rect.setAttribute("height", vbH);
-      rect.setAttribute("width", reduce ? vbW : 0);
-      rects.push({ rect: rect, w: vbW });
+      span.appendChild(svg);
+      el.appendChild(span);
+
+      if (wi < words.length - 1) delay += DELAY_MULTIPLIER * WORD_GAP;
     });
+  }
 
-    if (reduce || !rects.length) return;
-
-    var play = function () {
-      if (hasGSAP) {
-        rects.forEach(function (r, i) {
-          window.gsap.to(r.rect, {
-            attr: { width: r.w },
-            duration: WORD_DUR,
-            ease: EASE,
-            delay: INITIAL + i * WORD_STAGGER,
-          });
-        });
-      } else {
-        rects.forEach(function (r) { r.rect.setAttribute("width", r.w); });
-      }
-    };
-
-    if (typeof window.ScrollTrigger !== "undefined") {
-      window.ScrollTrigger.create({ trigger: el, start: "top 82%", once: true, onEnter: play });
-    } else if ("IntersectionObserver" in window) {
-      var io = new IntersectionObserver(function (entries, obs) {
-        entries.forEach(function (e) { if (e.isIntersecting) { play(); obs.unobserve(e.target); } });
-      }, { threshold: 0.4 });
-      io.observe(el);
-    } else {
-      play();
-    }
+  function measure(d) {
+    var tmp = document.createElementNS(NS, "svg");
+    tmp.setAttribute("style", "position:absolute;width:0;height:0;overflow:hidden");
+    var p = document.createElementNS(NS, "path");
+    p.setAttribute("d", d);
+    tmp.appendChild(p);
+    document.body.appendChild(tmp);
+    var l = 0;
+    try { l = p.getTotalLength(); } catch (e) {}
+    document.body.removeChild(tmp);
+    return l || 1;
   }
 })();

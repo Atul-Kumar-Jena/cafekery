@@ -36,6 +36,13 @@
   font-display: swap;
   src: url("../fonts/dancingscript.ttf") format("truetype");
 }
+@font-face {
+  font-family: "Caveat";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../fonts/caveat.ttf") format("truetype");
+}
 
 :root {
   --c-terracotta: #c1643b;
@@ -50,7 +57,7 @@
 
   --font-sans: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-script: "Parisienne", "Snell Roundhand", "Brush Script MT", cursive;
-  --font-hand: "Dancing Script", "Segoe Script", "Brush Script MT", cursive;
+  --font-hand: "Caveat", "Segoe Script", "Bradley Hand", cursive;
 
   --maxw: 1340px;
   --gutter: clamp(1.25rem, 4vw, 4rem);
