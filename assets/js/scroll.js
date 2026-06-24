@@ -119,7 +119,8 @@
         if (!el) return;
         var size = Math.max(140, Math.min(360, w * 0.34 * dd.s));
         var px = w * dd.xf;
-        var py = docTop(el) + (el.offsetHeight || vh) * dd.yo;
+        var off = (el.offsetHeight || vh) * dd.yo; // doodle's offset within its section
+        var py = docTop(el) + off;
         var g = document.createElementNS(NS, "g");
         g.setAttribute("transform",
           "translate(" + (px - size / 2).toFixed(1) + "," + (py - size / 2).toFixed(1) + ") scale(" + (size / 100).toFixed(3) + ")");
@@ -133,11 +134,17 @@
         p.style.strokeDasharray = l;
         p.style.strokeDashoffset = reduce ? 0 : l;
         if (!reduce) {
-          // play once when the section arrives (no scrub) so it stays
-          // smooth and gradual even during fast scrolling
+          // play once when the DOODLE ITSELF reaches the lower viewport
+          // (not when the section top does) so it draws exactly as you
+          // scroll to it, never early. Offset down the section by `off`.
           var dt = gsap.to(p, {
             strokeDashoffset: 0, duration: 1.5, ease: "power2.out",
-            scrollTrigger: { trigger: el, start: "top 80%", once: true, invalidateOnRefresh: true },
+            scrollTrigger: {
+              trigger: el,
+              start: "top+=" + Math.round(off) + " 88%",
+              once: true,
+              invalidateOnRefresh: true,
+            },
           });
           sts.push(dt.scrollTrigger);
         }
