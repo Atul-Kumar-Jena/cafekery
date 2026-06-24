@@ -42,15 +42,18 @@
                 "M41 56 C36 51 41 45 48 47 C56 49 56 58 48 60 C38 62 32 54 36 46 C40 38 52 36 60 41 " +
                 "M44 20 C47 15 43 12 45 8 M54 20 C57 15 53 12 55 8";
 
-    // Each doodle anchors to a real section, sits ABOVE content, and is
-    // coloured to contrast that section's background.
+    // Each doodle anchors near a real section but is then placed by
+    // measuring the page and dropping it into genuinely EMPTY space, so
+    // it never lands on top of text/headings. `s` scales the target size;
+    // `c` is its colour (cream contrasts terracotta cards, terracotta the
+    // cream canvas — chosen per nearest background at placement time).
     var CREAM = "#fffaf7", TERRA = "#c1643b";
     var doodles = [
-      { d: HEART, sel: "#spring", xf: 0.85, yo: 0.16, s: 1.5, c: CREAM },
-      { d: PASTA, sel: "#brunch-intro", xf: 0.82, yo: 0.34, s: 2.0, c: TERRA },
-      { d: SPRIG, sel: "#menu", xf: 0.9, yo: 0.12, s: 1.4, c: TERRA },
-      { d: COFFEE, sel: "#coffee-intro", xf: 0.12, yo: 0.30, s: 1.55, c: TERRA },
-      { d: CROISSANT, sel: "#order", xf: 0.12, yo: 0.26, s: 1.6, c: TERRA },
+      { d: HEART, sel: "#spring", s: 1.4 },
+      { d: PASTA, sel: "#brunch-intro", s: 1.8 },
+      { d: SPRIG, sel: "#menu", s: 1.3 },
+      { d: COFFEE, sel: "#coffee-intro", s: 1.5 },
+      { d: CROISSANT, sel: "#order", s: 1.5 },
     ];
 
     var weaveSvg, doodleSvg, sts = [];
@@ -73,6 +76,52 @@
         y = ny; dir *= -1;
       }
       return d;
+    }
+
+    // Collect document-space rectangles of everything a doodle must not
+    // overlap (text, headings, cards, images, the big faint words…).
+    function getObstacles() {
+      var sy = window.pageYOffset || document.documentElement.scrollTop || 0;
+      var sel = "h1,h2,h3,h4,h5,p,a,button,img,li," +
+        ".eyebrow,.title-special,.head-italic,.bigtype__word,.bigtype__script," +
+        ".menu-card,.foodtile,.hpanel,.loop-carousel,.feature,.btn,.hero__media";
+      var out = [];
+      document.querySelectorAll(sel).forEach(function (el) {
+        var r = el.getBoundingClientRect();
+        if (r.width < 4 || r.height < 4) return;
+        out.push({ x: r.left, y: r.top + sy, r: r.right, b: r.bottom + sy });
+      });
+      return out;
+    }
+
+    function clearOf(box, obstacles, pad) {
+      for (var i = 0; i < obstacles.length; i++) {
+        var o = obstacles[i];
+        if (box.x - pad < o.r && box.r + pad > o.x &&
+            box.y - pad < o.b && box.b + pad > o.y) return false;
+      }
+      return true;
+    }
+
+    // Find an empty square of `size` within [yTop,yBottom]; prefers the
+    // side margins (where whitespace lives) and shrinks before giving up.
+    function findSpot(obstacles, yTop, yBottom, w, size, pad) {
+      var minSize = Math.max(96, size * 0.45);
+      var sideM = Math.max(10, w * 0.03);
+      for (var s = size; s >= minSize; s -= 18) {
+        // candidate x positions: right margin, left margin, then centre-ish
+        var xs = [w - sideM - s, sideM, (w - s) * 0.5, w * 0.66 - s / 2, w * 0.34 - s / 2];
+        var step = Math.max(20, s * 0.4);
+        for (var y = yTop; y + s <= yBottom; y += step) {
+          for (var k = 0; k < xs.length; k++) {
+            var x = xs[k];
+            if (x < sideM - 2 || x + s > w - sideM + 2) continue;
+            var box = { x: x, y: y, r: x + s, b: y + s };
+            if (clearOf(box, obstacles, pad)) return { x: x, y: y, size: s };
+          }
+        }
+      }
+      return null;
     }
 
     function mkSvg(cls, w, h) {
@@ -111,40 +160,49 @@
         sts.push(mt.scrollTrigger);
       }
 
-      // --- doodles (above content) ---
+      // --- doodles (above content, but placed only in EMPTY space) ---
       doodleSvg = mkSvg("lineart-doodles", w, h);
       document.body.appendChild(doodleSvg);
+      var obstacles = getObstacles();
+      var taken = []; // doodles already placed become obstacles too
+      var pad = Math.max(14, w * 0.03);
+
       doodles.forEach(function (dd) {
         var el = document.querySelector(dd.sel);
         if (!el) return;
-        var size = Math.max(140, Math.min(360, w * 0.34 * dd.s));
-        var px = w * dd.xf;
-        var off = (el.offsetHeight || vh) * dd.yo; // doodle's offset within its section
-        var py = docTop(el) + off;
+        var top = docTop(el);
+        var sh = el.offsetHeight || vh;
+        // search this section plus the gap just below it
+        var yTop = Math.max(vh * 0.6, top - vh * 0.15);
+        var yBottom = Math.min(h, top + sh + vh * 0.45);
+        var target = Math.max(120, Math.min(320, w * 0.34 * dd.s));
+        var spot = findSpot(obstacles.concat(taken), yTop, yBottom, w, target, pad);
+        if (!spot) return; // no clean room -> omit rather than cover text
+
+        taken.push({ x: spot.x, y: spot.y, r: spot.x + spot.size, b: spot.y + spot.size });
+
+        // doodles always land in the cream canvas (cards are obstacles),
+        // so terracotta reads cleanly everywhere.
+        var col = TERRA;
+
         var g = document.createElementNS(NS, "g");
         g.setAttribute("transform",
-          "translate(" + (px - size / 2).toFixed(1) + "," + (py - size / 2).toFixed(1) + ") scale(" + (size / 100).toFixed(3) + ")");
+          "translate(" + spot.x.toFixed(1) + "," + spot.y.toFixed(1) + ") scale(" + (spot.size / 100).toFixed(3) + ")");
         var p = document.createElementNS(NS, "path");
         p.setAttribute("class", "doodle");
         p.setAttribute("d", dd.d);
-        p.setAttribute("stroke", dd.c);
+        p.setAttribute("stroke", col);
         g.appendChild(p);
         doodleSvg.appendChild(g);
         var l = p.getTotalLength();
         p.style.strokeDasharray = l;
         p.style.strokeDashoffset = reduce ? 0 : l;
         if (!reduce) {
-          // play once when the DOODLE ITSELF reaches the lower viewport
-          // (not when the section top does) so it draws exactly as you
-          // scroll to it, never early. Offset down the section by `off`.
+          // draw once, when the doodle's own position reaches lower viewport
+          var startPx = Math.max(0, spot.y - vh * 0.85);
           var dt = gsap.to(p, {
-            strokeDashoffset: 0, duration: 1.5, ease: "power2.out",
-            scrollTrigger: {
-              trigger: el,
-              start: "top+=" + Math.round(off) + " 88%",
-              once: true,
-              invalidateOnRefresh: true,
-            },
+            strokeDashoffset: 0, duration: 1.4, ease: "power2.out",
+            scrollTrigger: { trigger: document.body, start: startPx + "px top", once: true, invalidateOnRefresh: true },
           });
           sts.push(dt.scrollTrigger);
         }
