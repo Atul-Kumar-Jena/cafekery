@@ -100,7 +100,7 @@
       if (!reduce) {
         var mt = gsap.to(main, {
           strokeDashoffset: 0, ease: "none",
-          scrollTrigger: { trigger: document.body, start: "top top", end: "bottom bottom", scrub: 1.2, invalidateOnRefresh: true },
+          scrollTrigger: { trigger: document.body, start: "top top", end: "bottom bottom", scrub: 1.6, invalidateOnRefresh: true },
         });
         sts.push(mt.scrollTrigger);
       }
@@ -111,7 +111,7 @@
       doodles.forEach(function (dd) {
         var el = document.querySelector(dd.sel);
         if (!el) return;
-        var size = Math.max(92, Math.min(190, w * 0.24 * dd.s));
+        var size = Math.max(110, Math.min(230, w * 0.28 * dd.s));
         var px = w * dd.xf;
         var py = docTop(el) + (el.offsetHeight || vh) * dd.yo;
         var g = document.createElementNS(NS, "g");
@@ -127,9 +127,11 @@
         p.style.strokeDasharray = l;
         p.style.strokeDashoffset = reduce ? 0 : l;
         if (!reduce) {
+          // play once when the section arrives (no scrub) so it stays
+          // smooth and gradual even during fast scrolling
           var dt = gsap.to(p, {
-            strokeDashoffset: 0, ease: "power1.inOut",
-            scrollTrigger: { trigger: el, start: "top 82%", end: "top 38%", scrub: true, invalidateOnRefresh: true },
+            strokeDashoffset: 0, duration: 1.5, ease: "power2.out",
+            scrollTrigger: { trigger: el, start: "top 80%", once: true, invalidateOnRefresh: true },
           });
           sts.push(dt.scrollTrigger);
         }
