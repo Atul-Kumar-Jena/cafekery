@@ -37,73 +37,81 @@
                 "M50 46 C42 43 37 36 36 28 M50 46 C58 43 63 36 64 28";
     var CROISSANT = "M18 66 C30 40 70 40 82 66 C64 55 36 55 18 66 Z M32 60 C44 53 56 53 68 60";
 
-    // Each doodle is anchored to a real section so it's reliably
-    // visible and draws gradually as that section scrolls in (robust
-    // even with the pinned side-scroll changing scroll mapping).
+    // Each doodle anchors to a real section, sits ABOVE content, and is
+    // coloured to contrast that section's background.
+    var CREAM = "#fffaf7", TERRA = "#c1643b", COCOA = "#5b3018";
     var doodles = [
-      { d: HEART, sel: "#spring", xf: 0.84, yo: 0.20, s: 0.9 },
-      { d: SPRIG, sel: "#menu", xf: 0.90, yo: 0.12, s: 0.85 },
-      { d: COFFEE, sel: "#coffee-intro", xf: 0.13, yo: 0.28, s: 0.95 },
-      { d: CROISSANT, sel: "#order", xf: 0.12, yo: 0.30, s: 0.95 },
+      { d: HEART, sel: "#spring", xf: 0.87, yo: 0.16, s: 1.1, c: CREAM },
+      { d: SPRIG, sel: "#menu", xf: 0.93, yo: 0.10, s: 1.0, c: TERRA },
+      { d: COFFEE, sel: "#coffee-intro", xf: 0.10, yo: 0.30, s: 1.15, c: TERRA },
+      { d: CROISSANT, sel: "#order", xf: 0.10, yo: 0.26, s: 1.1, c: TERRA },
     ];
 
-    var svg, sts = [];
+    var weaveSvg, doodleSvg, sts = [];
 
     function docTop(el) { var y = 0; while (el) { y += el.offsetTop; el = el.offsetParent; } return y; }
     function clearST() { sts.forEach(function (s) { try { s.kill(); } catch (e) {} }); sts = []; }
 
+    // smooth, graceful vertical weave (long S-curves)
     function snake(w, y0, y1) {
-      var amp = Math.min(w * 0.26, 300);
+      var amp = Math.min(w * 0.3, 360);
       var cx = w * 0.5;
-      var seg = Math.max(380, window.innerHeight * 0.6);
+      var seg = Math.max(window.innerHeight * 0.9, 560);
       var d = "M " + cx.toFixed(1) + " " + y0.toFixed(1);
       var y = y0, dir = 1;
       while (y < y1) {
-        var ny = Math.min(y1, y + seg);
-        d += " C " + (cx + dir * amp).toFixed(1) + " " + (y + (ny - y) * 0.35).toFixed(1) +
-             ", " + (cx + dir * amp).toFixed(1) + " " + (y + (ny - y) * 0.65).toFixed(1) +
+        var ny = Math.min(y1, y + seg), m = ny - y;
+        d += " C " + (cx + dir * amp).toFixed(1) + " " + (y + m * 0.5).toFixed(1) +
+             ", " + (cx + dir * amp).toFixed(1) + " " + (y + m * 0.5).toFixed(1) +
              ", " + cx.toFixed(1) + " " + ny.toFixed(1);
         y = ny; dir *= -1;
       }
       return d;
     }
 
+    function mkSvg(cls, w, h) {
+      var s = document.createElementNS(NS, "svg");
+      s.setAttribute("class", cls);
+      s.setAttribute("width", w);
+      s.setAttribute("height", h);
+      s.setAttribute("viewBox", "0 0 " + w + " " + h);
+      s.setAttribute("aria-hidden", "true");
+      return s;
+    }
+
     function build() {
       clearST();
-      if (svg) svg.remove();
+      if (weaveSvg) weaveSvg.remove();
+      if (doodleSvg) doodleSvg.remove();
 
       var w = window.innerWidth;
       var h = Math.max(document.documentElement.scrollHeight, window.innerHeight);
       var vh = window.innerHeight;
 
-      svg = document.createElementNS(NS, "svg");
-      svg.setAttribute("class", "lineart-scroll");
-      svg.setAttribute("width", w);
-      svg.setAttribute("height", h);
-      svg.setAttribute("viewBox", "0 0 " + w + " " + h);
-      svg.setAttribute("aria-hidden", "true");
-
+      // --- main weave (behind content) ---
+      weaveSvg = mkSvg("lineart-scroll", w, h);
       var main = document.createElementNS(NS, "path");
       main.setAttribute("d", snake(w, vh * 0.9, h - vh * 0.3));
-      svg.appendChild(main);
-      document.body.appendChild(svg);
-
+      weaveSvg.appendChild(main);
+      document.body.appendChild(weaveSvg);
       var mlen = main.getTotalLength();
       main.style.strokeDasharray = mlen;
       main.style.strokeDashoffset = reduce ? 0 : mlen;
       if (!reduce) {
         var mt = gsap.to(main, {
-          strokeDashoffset: 0,
-          ease: "none",
-          scrollTrigger: { trigger: document.body, start: "top top", end: "bottom bottom", scrub: 1, invalidateOnRefresh: true },
+          strokeDashoffset: 0, ease: "none",
+          scrollTrigger: { trigger: document.body, start: "top top", end: "bottom bottom", scrub: 1.2, invalidateOnRefresh: true },
         });
         sts.push(mt.scrollTrigger);
       }
 
+      // --- doodles (above content) ---
+      doodleSvg = mkSvg("lineart-doodles", w, h);
+      document.body.appendChild(doodleSvg);
       doodles.forEach(function (dd) {
         var el = document.querySelector(dd.sel);
         if (!el) return;
-        var size = Math.max(74, Math.min(170, w * 0.2 * dd.s));
+        var size = Math.max(92, Math.min(190, w * 0.24 * dd.s));
         var px = w * dd.xf;
         var py = docTop(el) + (el.offsetHeight || vh) * dd.yo;
         var g = document.createElementNS(NS, "g");
@@ -112,16 +120,16 @@
         var p = document.createElementNS(NS, "path");
         p.setAttribute("class", "doodle");
         p.setAttribute("d", dd.d);
+        p.setAttribute("stroke", dd.c);
         g.appendChild(p);
-        svg.appendChild(g);
+        doodleSvg.appendChild(g);
         var l = p.getTotalLength();
         p.style.strokeDasharray = l;
         p.style.strokeDashoffset = reduce ? 0 : l;
         if (!reduce) {
           var dt = gsap.to(p, {
-            strokeDashoffset: 0,
-            ease: "power1.inOut", // gradual draw
-            scrollTrigger: { trigger: el, start: "top 80%", end: "top 32%", scrub: true, invalidateOnRefresh: true },
+            strokeDashoffset: 0, ease: "power1.inOut",
+            scrollTrigger: { trigger: el, start: "top 82%", end: "top 38%", scrub: true, invalidateOnRefresh: true },
           });
           sts.push(dt.scrollTrigger);
         }

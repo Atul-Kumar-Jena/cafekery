@@ -261,7 +261,7 @@ h1, h2, h3, h4 { line-height: 1.05; letter-spacing: -0.01em; font-weight: 800; }
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: 3;
+  z-index: -1;
   overflow: visible;
 }
 .lineart path {
@@ -408,7 +408,7 @@ body.noScroll .buttonToggleNavAside span:nth-child(3) { transform: translateY(-7
   justify-content: center;
   padding-top: var(--header-h);
   padding-bottom: clamp(2rem, 6vw, 5rem);
-  background: var(--c-cream);
+  background: transparent; /* body cream shows; line-art sits behind */
   overflow: hidden;
 }
 
@@ -997,25 +997,37 @@ body.noScroll .buttonToggleNavAside span:nth-child(3) { transform: translateY(-7
   .hw-ink { opacity: 1; animation: none; }
 }
 
-/* ---- Page-spanning line-art that draws as you scroll ------ */
-.lineart-scroll {
+/* ---- Page-spanning line-art that draws as you scroll ------
+   Main weave sits BEHIND content (ducks under panels/cards/text);
+   doodles sit ABOVE content so they read clearly. */
+.lineart-scroll,
+.lineart-doodles {
   position: absolute;
   top: 0;
   left: 0;
-  z-index: 3;          /* above section content, below the fixed header */
   pointer-events: none;
   overflow: visible;
 }
+.lineart-scroll { z-index: -1; }   /* behind everything but the page bg */
+.lineart-doodles { z-index: 4; }   /* above section content */
 .lineart-scroll path {
   fill: none;
   stroke: #cf8f54;
-  stroke-width: 2.8;
+  stroke-width: 3;
   stroke-linecap: round;
   stroke-linejoin: round;
-  vector-effect: non-scaling-stroke; /* constant thickness at any scale */
-  opacity: 0.72;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.7;
 }
-.lineart-scroll .doodle { opacity: 0.92; stroke-width: 3.2; }
+.lineart-doodles path {
+  fill: none;
+  stroke-width: 3.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.95;
+}
 @media (prefers-reduced-motion: reduce) {
-  .lineart-scroll path { stroke-dashoffset: 0 !important; }
+  .lineart-scroll path,
+  .lineart-doodles path { stroke-dashoffset: 0 !important; }
 }
