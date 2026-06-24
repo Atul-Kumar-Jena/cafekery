@@ -46,11 +46,11 @@
     // coloured to contrast that section's background.
     var CREAM = "#fffaf7", TERRA = "#c1643b";
     var doodles = [
-      { d: HEART, sel: "#spring", xf: 0.87, yo: 0.15, s: 1.2, c: CREAM },
-      { d: PASTA, sel: "#brunch-intro", xf: 0.84, yo: 0.34, s: 1.7, c: TERRA },
-      { d: SPRIG, sel: "#menu", xf: 0.93, yo: 0.10, s: 1.1, c: TERRA },
-      { d: COFFEE, sel: "#coffee-intro", xf: 0.11, yo: 0.30, s: 1.25, c: TERRA },
-      { d: CROISSANT, sel: "#order", xf: 0.11, yo: 0.26, s: 1.25, c: TERRA },
+      { d: HEART, sel: "#spring", xf: 0.85, yo: 0.16, s: 1.5, c: CREAM },
+      { d: PASTA, sel: "#brunch-intro", xf: 0.82, yo: 0.34, s: 2.0, c: TERRA },
+      { d: SPRIG, sel: "#menu", xf: 0.9, yo: 0.12, s: 1.4, c: TERRA },
+      { d: COFFEE, sel: "#coffee-intro", xf: 0.12, yo: 0.30, s: 1.55, c: TERRA },
+      { d: CROISSANT, sel: "#order", xf: 0.12, yo: 0.26, s: 1.6, c: TERRA },
     ];
 
     var weaveSvg, doodleSvg, sts = [];
@@ -117,7 +117,7 @@
       doodles.forEach(function (dd) {
         var el = document.querySelector(dd.sel);
         if (!el) return;
-        var size = Math.max(120, Math.min(300, w * 0.3 * dd.s));
+        var size = Math.max(140, Math.min(360, w * 0.34 * dd.s));
         var px = w * dd.xf;
         var py = docTop(el) + (el.offsetHeight || vh) * dd.yo;
         var g = document.createElementNS(NS, "g");
