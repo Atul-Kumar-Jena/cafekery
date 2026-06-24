@@ -25,13 +25,16 @@
     window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var hasGSAP = typeof window.gsap !== "undefined";
 
-  var ready =
-    document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+  // Wait until the script font is ACTUALLY loaded before measuring, or
+  // getBBox sizes the boxes for the fallback font and the text distorts
+  // when the real font swaps in (very visible on slower mobile loads).
+  var waits = [];
   if (document.fonts && document.fonts.load) {
-    try { document.fonts.load('600 1em "Dancing Script"'); } catch (e) {}
+    try { waits.push(document.fonts.load('600 1em "Dancing Script"')); } catch (e) {}
   }
+  if (document.fonts && document.fonts.ready) waits.push(document.fonts.ready);
 
-  ready.then(function () {
+  Promise.all(waits).catch(function () {}).then(function () {
     requestAnimationFrame(function () { nodes.forEach(build); });
   });
 
@@ -97,8 +100,8 @@
       svg.setAttribute("viewBox", vbX + " " + vbY + " " + vbW + " " + vbH);
       svg.setAttribute("preserveAspectRatio", "xMinYMid meet");
       svg.style.display = "block";
-      svg.style.height = vbH + "px";
       svg.style.width = vbW + "px";
+      svg.style.height = "auto"; // derive from aspect -> never squishes if width is capped
       svg.style.maxWidth = "100%";
       svg.style.overflow = "visible";
 
