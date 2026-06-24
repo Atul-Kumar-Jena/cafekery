@@ -36,15 +36,21 @@
     var SPRIG = "M50 88 L50 22 M50 60 C40 56 33 48 31 38 M50 60 C60 56 67 48 69 38 " +
                 "M50 46 C42 43 37 36 36 28 M50 46 C58 43 63 36 64 28";
     var CROISSANT = "M18 66 C30 40 70 40 82 66 C64 55 36 55 18 66 Z M32 60 C44 53 56 53 68 60";
+    // pasta plate: plate + rim + a noodle swirl + a little steam
+    var PASTA = "M8 52 C8 34 27 23 50 23 C73 23 92 34 92 52 C92 66 73 75 50 75 C27 75 8 66 8 52 Z " +
+                "M22 51 C22 41 34 34 50 34 C66 34 78 41 78 51 C78 60 66 66 50 66 C34 66 22 60 22 51 Z " +
+                "M41 56 C36 51 41 45 48 47 C56 49 56 58 48 60 C38 62 32 54 36 46 C40 38 52 36 60 41 " +
+                "M44 20 C47 15 43 12 45 8 M54 20 C57 15 53 12 55 8";
 
     // Each doodle anchors to a real section, sits ABOVE content, and is
     // coloured to contrast that section's background.
-    var CREAM = "#fffaf7", TERRA = "#c1643b", COCOA = "#5b3018";
+    var CREAM = "#fffaf7", TERRA = "#c1643b";
     var doodles = [
-      { d: HEART, sel: "#spring", xf: 0.87, yo: 0.16, s: 1.1, c: CREAM },
-      { d: SPRIG, sel: "#menu", xf: 0.93, yo: 0.10, s: 1.0, c: TERRA },
-      { d: COFFEE, sel: "#coffee-intro", xf: 0.10, yo: 0.30, s: 1.15, c: TERRA },
-      { d: CROISSANT, sel: "#order", xf: 0.10, yo: 0.26, s: 1.1, c: TERRA },
+      { d: HEART, sel: "#spring", xf: 0.87, yo: 0.15, s: 1.2, c: CREAM },
+      { d: PASTA, sel: "#brunch-intro", xf: 0.84, yo: 0.34, s: 1.7, c: TERRA },
+      { d: SPRIG, sel: "#menu", xf: 0.93, yo: 0.10, s: 1.1, c: TERRA },
+      { d: COFFEE, sel: "#coffee-intro", xf: 0.11, yo: 0.30, s: 1.25, c: TERRA },
+      { d: CROISSANT, sel: "#order", xf: 0.11, yo: 0.26, s: 1.25, c: TERRA },
     ];
 
     var weaveSvg, doodleSvg, sts = [];
@@ -111,7 +117,7 @@
       doodles.forEach(function (dd) {
         var el = document.querySelector(dd.sel);
         if (!el) return;
-        var size = Math.max(110, Math.min(230, w * 0.28 * dd.s));
+        var size = Math.max(120, Math.min(300, w * 0.3 * dd.s));
         var px = w * dd.xf;
         var py = docTop(el) + (el.offsetHeight || vh) * dd.yo;
         var g = document.createElementNS(NS, "g");
