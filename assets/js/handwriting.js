@@ -1,153 +1,92 @@
 /* =============================================================
-   ATUL's CAFEkery — handwriting "write-on" for cursive headings
-   Each .title-special is genuinely DRAWN by a pen: a single-stroke
-   (monoline) cursive — Hershey "Script medium", whose letters are open
-   strokes, not filled outlines — is laid out per word as one SVG path,
-   then drawn with stroke-dashoffset (length -> 0). A multi-subpath path
-   dash-draws its subpaths in order, so the letters appear one after
-   another, like a hand writing. No fill, no clip, no nib: none of the
-   outline-font failure modes (double lines, clipped capitals, unveil).
-   Font data + GSAP are self-hosted (no CDN). Reduced-motion / no-JS
-   shows the finished text.
+   ATUL's CAFEkery — "write-on" reveal for cursive headings
+   The real cursive text (Parisienne, same as the logo) stays in the
+   DOM — readable, selectable, accessible. We just wipe it in
+   left-to-right with a CSS clip-path when it scrolls into view, so it
+   reads like a pen writing at a constant speed. No SVG, no font data,
+   no GSAP.
+
+   Trigger is a plain getBoundingClientRect scroll check (not
+   IntersectionObserver — the page's GSAP/ScrollTrigger ancestors make
+   IO misreport visibility here). A safety timer reveals anything still
+   pending, so a heading can never stay hidden. Reduced-motion / no-JS
+   shows the finished text immediately.
    ============================================================= */
 (function () {
   "use strict";
 
   var SELECTOR = ".title-special";
-  var NS = "http://www.w3.org/2000/svg";
-  var FONT = window.HW_FONT;
 
-  // ---- layout (Hershey units; y is screen-down, baseline ~22) ----
-  var SPACE = 14;        // advance for a space
-  var TRACK = 2.0;       // extra tracking between letters (legibility)
-  var VBY = -10, VBH = 50, BASE_UNITS = 22;
+  // pacing: seconds per character, clamped — longer phrases write longer
+  var PER_CHAR = 0.06;
+  var MIN_DUR = 0.5;
+  var MAX_DUR = 2.2;
+  var SAFETY_MS = 4000; // never leave a heading hidden past this
 
-  // ---- pacing ----
-  var INITIAL_DELAY = 0.15;
-  var SPEED = 210;       // pen speed: stroke units per second
-  var MIN_DUR = 0.35, MAX_DUR = 1.7;
-  var WORD_GAP = 0.05;   // brief pen lift between words
-
-  var nodes = document.querySelectorAll(SELECTOR);
-  if (!nodes.length || !FONT || !FONT.chars) return;
+  var els = [].slice.call(document.querySelectorAll(SELECTOR));
+  if (!els.length) return;
 
   var reduce =
-    window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var hasGsap = typeof window.gsap !== "undefined";
+    window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  var io =
-    "IntersectionObserver" in window
-      ? new IntersectionObserver(function (entries, obs) {
-          entries.forEach(function (e) {
-            if (e.isIntersecting) { activate(e.target); obs.unobserve(e.target); }
-          });
-        }, { threshold: 0.2 })
-      : null;
+  function write(el) {
+    el.classList.add("is-written");
+  }
 
-  nodes.forEach(function (el) {
-    build(el);
-    prep(el);
-    // hidden (e.g. a closed dialog) can't be observed for intersection and
-    // would otherwise stay invisible — just show it fully written.
-    if (reduce || !io || el.offsetParent === null) finish(el);
-    else io.observe(el);
+  var pending = [];
+  els.forEach(function (el) {
+    var text = (el.textContent || "").replace(/\s+/g, " ").trim();
+    var dur = Math.min(MAX_DUR, Math.max(MIN_DUR, text.length * PER_CHAR));
+    el.style.setProperty("--hw-dur", dur.toFixed(2) + "s");
+    el.classList.add("hw-reveal");
+
+    // reduced-motion or hidden (e.g. a closed dialog) -> show fully at once.
+    if (reduce || el.offsetParent === null) write(el);
+    else pending.push(el);
   });
 
-  // translate one word's glyphs into a single combined path
-  function wordPath(word) {
-    var chars = FONT.chars, x = 0, d = "";
-    for (var i = 0; i < word.length; i++) {
-      var g = chars[word.charCodeAt(i) - 33];
-      if (!g || !g.d) { x += SPACE; continue; }
-      d += g.d.replace(/(-?\d+),(-?\d+)/g, function (m, a, b) { return ((+a) + x) + "," + b; }) + " ";
-      x += g.o + TRACK;
-    }
-    return { d: d.trim(), w: x };
+  if (!pending.length) return;
+
+  function inView(el) {
+    var r = el.getBoundingClientRect();
+    var vh = window.innerHeight || document.documentElement.clientHeight;
+    // start writing once the top edge is within the lower 88% of the viewport
+    return r.top < vh * 0.88 && r.bottom > 0;
   }
 
-  function build(el) {
-    var text = (el.textContent || "").replace(/\s+/g, " ").trim();
-    if (!text) return;
-
-    var cs = getComputedStyle(el);
-    var fontSize = parseFloat(cs.fontSize) || 64;
-    var ppu = fontSize / BASE_UNITS;
-    var sw = Math.max(2.2, fontSize * 0.04);
-
-    el.setAttribute("aria-label", text);
-    el.textContent = "";
-
-    var paths = [];
-    text.split(" ").forEach(function (word) {
-      var lay = wordPath(word);
-      if (!lay.w) return;
-      var span = document.createElement("span");
-      span.className = "handwriting-word";
-
-      var svg = document.createElementNS(NS, "svg");
-      svg.setAttribute("viewBox", "0 " + VBY + " " + lay.w.toFixed(1) + " " + VBH);
-      svg.setAttribute("aria-hidden", "true");
-      svg.style.display = "block";
-      svg.style.height = (VBH * ppu).toFixed(1) + "px";
-      svg.style.width = (lay.w * ppu).toFixed(1) + "px";
-      svg.style.maxWidth = "100%";
-      svg.style.overflow = "visible";
-
-      var p = document.createElementNS(NS, "path");
-      p.setAttribute("d", lay.d);
-      p.setAttribute("class", "hw-stroke");
-      p.style.strokeWidth = sw.toFixed(1) + "px";
-      svg.appendChild(p);
-      span.appendChild(svg);
-      el.appendChild(span);
-      paths.push(p);
+  var ticking = false;
+  function check() {
+    ticking = false;
+    pending = pending.filter(function (el) {
+      if (inView(el)) {
+        write(el);
+        return false;
+      }
+      return true;
     });
-    el.__hwPaths = paths;
+    if (!pending.length) teardown();
+  }
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    (window.requestAnimationFrame || window.setTimeout)(check);
+  }
+  function teardown() {
+    window.removeEventListener("scroll", onScroll);
+    window.removeEventListener("resize", onScroll);
   }
 
-  // dash each path by its own length; hidden until activated
-  function prep(el) {
-    (el.__hwPaths || []).forEach(function (p) {
-      var L = 0;
-      try { L = p.getTotalLength(); } catch (e) {}
-      L = L || 1;
-      p.__len = L;
-      p.style.strokeDasharray = L;
-      p.style.strokeDashoffset = reduce ? 0 : L;
-    });
-  }
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", onScroll, { passive: true });
 
-  function dur(p) {
-    return Math.min(MAX_DUR, Math.max(MIN_DUR, p.__len / SPEED));
-  }
+  // reveal anything already on screen at load
+  check();
 
-  function finish(el) {
-    (el.__hwPaths || []).forEach(function (p) { p.style.strokeDashoffset = 0; });
-  }
-
-  function activate(el) {
-    if (reduce) return finish(el);
-    var paths = el.__hwPaths || [];
-    if (!paths.length) return;
-
-    if (hasGsap) {
-      var tl = window.gsap.timeline({ delay: INITIAL_DELAY });
-      paths.forEach(function (p, i) {
-        tl.to(p, { strokeDashoffset: 0, duration: dur(p), ease: "none" },
-          i === 0 ? 0 : "+=" + WORD_GAP);
-      });
-    } else {
-      var t = INITIAL_DELAY * 1000;
-      paths.forEach(function (p) {
-        var d = dur(p);
-        (function (pp, delay, secs) {
-          setTimeout(function () {
-            pp.style.transition = "stroke-dashoffset " + secs + "s linear";
-            pp.style.strokeDashoffset = 0;
-          }, delay);
-        })(p, t, d);
-        t += (d + WORD_GAP) * 1000;
-      });
-    }
-  }
+  // safety net: a heading must never remain hidden, whatever the scroll math
+  window.setTimeout(function () {
+    pending.forEach(write);
+    pending = [];
+    teardown();
+  }, SAFETY_MS);
 })();
