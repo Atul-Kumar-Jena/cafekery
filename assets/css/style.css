@@ -223,27 +223,23 @@ h1, h2, h3, h4 { line-height: 1.05; letter-spacing: -0.01em; font-weight: 800; }
 }
 .title-special--cream { color: var(--c-cream); }
 
-.handwriting-word { display: inline-block; margin-right: 0.16em; vertical-align: top; }
-.handwriting-word svg { display: block; width: 100%; height: auto; overflow: visible; }
+.handwriting-word { display: inline-block; margin-right: 0.45em; vertical-align: top; }
+.handwriting-word svg { display: block; overflow: visible; }
 
-/* filled, solid letters — revealed L->R letter by letter (clip mask) */
-.hw-glyph { fill: currentColor; stroke: none; }
-
-.draw-path {
+/* single-stroke (monoline) cursive, drawn by a pen via stroke-dashoffset.
+   non-scaling-stroke keeps the pen a constant px width at every heading
+   size (the viewBox is in font units, so without it the stroke scales up
+   into thick blobs on large headings). */
+.hw-stroke {
   fill: none;
   stroke: currentColor;
-  stroke-width: 5px;
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-dasharray: var(--l);
-  stroke-dashoffset: var(--l);
+  vector-effect: non-scaling-stroke;
 }
-.handwriting-word.is-active .draw-path { animation: drawLine var(--t) linear var(--d) forwards; }
-
-@keyframes drawLine { to { stroke-dashoffset: 0; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .draw-path { stroke-dashoffset: 0; animation: none; }
+  .hw-stroke { stroke-dashoffset: 0 !important; }
 }
 
 /* ---- Scroll-reveal ----------------------------------------- */
@@ -987,26 +983,6 @@ body.noScroll .buttonToggleNavAside span:nth-child(3) { transform: translateY(-7
 .ticket li { display: flex; justify-content: space-between; font-size: 0.92rem; }
 .ticket__done { margin-top: 0.9rem; width: 100%; }
 .kds-empty { color: var(--c-cocoa-soft); margin-top: 2rem; }
-
-/* ---- Pen draws each letter; ink fills in just behind it --- */
-.hw-stroke {
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-dasharray: var(--l);
-  stroke-dashoffset: var(--l);
-}
-.handwriting-word.is-active .hw-stroke {
-  animation: drawLine var(--t) ease var(--d) forwards;
-}
-.hw-ink { opacity: 0; }
-.handwriting-word.is-active .hw-ink {
-  animation: inkFill var(--ft) ease var(--fd) forwards;
-}
-@keyframes inkFill { to { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) {
-  .hw-stroke { stroke-dashoffset: 0; animation: none; }
-  .hw-ink { opacity: 1; animation: none; }
-}
 
 /* ---- Page-spanning line-art that draws as you scroll ------
    Main weave sits BEHIND content (ducks under panels/cards/text);
