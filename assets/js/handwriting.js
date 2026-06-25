@@ -1,14 +1,14 @@
 /* =============================================================
-   ATUL's CAFEkery — "write-on" reveal for cursive headings
-   The real cursive text (Parisienne, same as the logo) stays in the
-   DOM — readable, selectable, accessible. We just wipe it in
-   left-to-right with a CSS clip-path when it scrolls into view, so it
-   reads like a pen writing at a constant speed. No SVG, no font data,
-   no GSAP.
+   ATUL's CAFEkery — letter-by-letter "write-on" for cursive headings
+   The real cursive text (Parisienne, same as the logo) is kept and
+   rebuilt as per-word / per-letter spans, then each letter is drawn in
+   sequence with a quick left-to-right clip-path wipe — like a pen
+   writing each glyph in reading order (so two-line headings write
+   line by line, letter by letter). No SVG, no font data, no GSAP.
 
    Trigger is a plain getBoundingClientRect scroll check (not
    IntersectionObserver — the page's GSAP/ScrollTrigger ancestors make
-   IO misreport visibility here). A safety timer reveals anything still
+   IO misreport visibility here). A safety timer writes anything still
    pending, so a heading can never stay hidden. Reduced-motion / no-JS
    shows the finished text immediately.
    ============================================================= */
@@ -17,11 +17,11 @@
 
   var SELECTOR = ".title-special";
 
-  // pacing: seconds per character, clamped — longer phrases write longer
-  var PER_CHAR = 0.06;
-  var MIN_DUR = 0.5;
-  var MAX_DUR = 2.2;
-  var SAFETY_MS = 4000; // never leave a heading hidden past this
+  // pacing: ms between letters, with a total cap so long phrases stay snappy
+  var STEP_MS = 65;        // delay between consecutive letters
+  var STEP_MIN = 26;       // floor when a phrase is long
+  var TOTAL_CAP = 2400;    // a heading finishes within ~this many ms
+  var SAFETY_MS = 4000;    // never leave a heading hidden past this
 
   var els = [].slice.call(document.querySelectorAll(SELECTOR));
   if (!els.length) return;
@@ -30,42 +30,71 @@
     window.matchMedia &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  function write(el) {
-    el.classList.add("is-written");
-  }
-
-  var pending = [];
-  els.forEach(function (el) {
+  // rebuild text as .hw-word > .hw-char spans; returns the char spans in order
+  function build(el) {
     var text = (el.textContent || "").replace(/\s+/g, " ").trim();
-    var dur = Math.min(MAX_DUR, Math.max(MIN_DUR, text.length * PER_CHAR));
-    el.style.setProperty("--hw-dur", dur.toFixed(2) + "s");
+    if (!text) return [];
+    el.setAttribute("aria-label", text);
+    el.textContent = "";
     el.classList.add("hw-reveal");
 
+    var chars = [];
+    text.split(" ").forEach(function (word, wi) {
+      if (wi > 0) el.appendChild(document.createTextNode(" "));
+      var w = document.createElement("span");
+      w.className = "hw-word";
+      w.setAttribute("aria-hidden", "true");
+      for (var i = 0; i < word.length; i++) {
+        var c = document.createElement("span");
+        c.className = "hw-char";
+        c.textContent = word[i];
+        w.appendChild(c);
+        chars.push(c);
+      }
+      el.appendChild(w);
+    });
+    return chars;
+  }
+
+  function writeAll(chars) {
+    chars.forEach(function (c) { c.classList.add("lit"); });
+  }
+
+  var items = [];
+  els.forEach(function (el) {
+    var chars = build(el);
+    if (!chars.length) return;
     // reduced-motion or hidden (e.g. a closed dialog) -> show fully at once.
-    if (reduce || el.offsetParent === null) write(el);
-    else pending.push(el);
+    if (reduce || el.offsetParent === null) writeAll(chars);
+    else items.push({ el: el, chars: chars, started: false });
   });
 
-  if (!pending.length) return;
+  if (!items.length) return;
+
+  function run(item) {
+    if (item.started) return;
+    item.started = true;
+    var n = item.chars.length;
+    var step = Math.max(STEP_MIN, Math.min(STEP_MS, TOTAL_CAP / n));
+    item.chars.forEach(function (c, i) {
+      window.setTimeout(function () { c.classList.add("lit"); }, i * step);
+    });
+  }
 
   function inView(el) {
     var r = el.getBoundingClientRect();
     var vh = window.innerHeight || document.documentElement.clientHeight;
-    // start writing once the top edge is within the lower 88% of the viewport
-    return r.top < vh * 0.88 && r.bottom > 0;
+    return r.top < vh * 0.86 && r.bottom > 0;
   }
 
   var ticking = false;
   function check() {
     ticking = false;
-    pending = pending.filter(function (el) {
-      if (inView(el)) {
-        write(el);
-        return false;
-      }
+    items = items.filter(function (item) {
+      if (inView(item.el)) { run(item); return false; }
       return true;
     });
-    if (!pending.length) teardown();
+    if (!items.length) teardown();
   }
   function onScroll() {
     if (ticking) return;
@@ -80,13 +109,13 @@
   window.addEventListener("scroll", onScroll, { passive: true });
   window.addEventListener("resize", onScroll, { passive: true });
 
-  // reveal anything already on screen at load
+  // write anything already on screen at load
   check();
 
   // safety net: a heading must never remain hidden, whatever the scroll math
   window.setTimeout(function () {
-    pending.forEach(write);
-    pending = [];
+    items.forEach(function (item) { writeAll(item.chars); });
+    items = [];
     teardown();
   }, SAFETY_MS);
 })();
