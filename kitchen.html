@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kitchen · HAVEN</title>
+  <title>Kitchen · Atul's Cafekery</title>
   <meta name="robots" content="noindex" />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23c1643b%27/%3E%3Ctext x=%2716%27 y=%2723%27 font-family=%27Georgia,serif%27 font-size=%2720%27 fill=%27%23fffaf7%27 text-anchor=%27middle%27%3Eh%3C/text%3E%3C/svg%3E" />
-  <link rel="stylesheet" href="assets/css/style.css?v=19" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23c1643b%27/%3E%3Ctext x=%2716%27 y=%2723%27 font-family=%27Georgia,serif%27 font-size=%2720%27 fill=%27%23fffaf7%27 text-anchor=%27middle%27%3EC%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="assets/css/style.css?v=20" />
 </head>
 <body class="app">
 
   <header class="app-top">
-    <a class="brand" href="index.html" aria-label="HAVEN home">haven</a>
+    <a class="brand" href="index.html" aria-label="Atul&#39;s Cafekery home">Atul's Cafekery</a>
     <span class="table-badge">Kitchen board</span>
   </header>
 
@@ -86,7 +86,7 @@
                 '<div class="ticket__top"><span class="ticket__table">Table ' + o.table + "</span>" +
                 '<span class="ticket__time">' + ago(o.placedAt) + "</span></div>" +
                 "<ul>" + o.items.map(function (it) {
-                  return "<li><span>" + it.qty + "× " + it.name + "</span><span>€" + fmt(it.qty * it.price) + "</span></li>";
+                  return "<li><span>" + it.qty + "× " + it.name + "</span><span>₹" + fmt(it.qty * it.price) + "</span></li>";
                 }).join("") + "</ul>" +
                 '<button class="btn ticket__done" onclick="__done(\'' + o.clientOrderId + '\')">Mark ready</button>' +
               "</div>"

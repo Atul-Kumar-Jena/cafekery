@@ -1,30 +1,29 @@
 /* =============================================================
-   HAVEN — handwriting "write-on" for cursive headings
-   Per-glyph PEN STROKE: each .title-special is rebuilt with
-   OpenType.js as word spans of SVG glyph paths, and every letter
-   is DRAWN in reading order (stroke-dashoffset), so it reads as a
-   pen writing — not a wipe/unveil. Uses Caveat, a monoline
-   handwriting font whose letters don't fuse, so per-glyph drawing
-   stays clean (no overlap/glitch, no double lines). Every word
-   shares one vertical box, so the line sits on a single baseline.
-   Self-hosted font + lib (no CDN). Falls back to plain styled text
-   without the library; reduced-motion shows the finished text.
+   ATUL's CAFEkery — handwriting "write-on" for cursive headings
+   Each .title-special is rebuilt with OpenType.js as word spans of
+   FILLED glyph shapes (solid, defined letters — not hollow strokes).
+   Every letter is then REVEALED left-to-right in reading order with
+   its own clip mask, sequenced with a little overlap, so the word
+   flows out exactly as a hand writes connected cursive — not a single
+   curtain wipe, and no random stroke start/end. Uses Dancing Script,
+   a connected handwriting font: because the letters are FILLED, the
+   joins simply merge like real writing (overlap never glitches).
+   Self-hosted font + lib (no CDN). Reduced-motion shows finished text.
    ============================================================= */
 (function () {
   "use strict";
 
   var SELECTOR = ".title-special";
   var NS = "http://www.w3.org/2000/svg";
-  var FONT_URL = "assets/fonts/caveat.ttf";
+  var FONT_URL = "assets/fonts/dancingscript.ttf";
 
   // ---- Feel (genuine handwriting pace) ----
-  var INITIAL_DELAY = 0.18;
-  var EM_SECONDS = 0.55;       // pen speed (seconds per em of stroke length)
-  var DELAY_MULTIPLIER = 0.62; // overlap between letters (flowing)
-  var WORD_GAP = 0.22;
-  var MIN_DUR = 0.28;
-  var MAX_DUR = 0.95;
-  var PEN_RATIO = 0.05;        // stroke width relative to glyph scale
+  var INITIAL_DELAY = 0.15;
+  var PER_EM = 0.85;   // pen speed: seconds to sweep one em of letter width
+  var OVERLAP = 0.72;  // start next letter before the previous finishes
+  var WORD_GAP = 0.16;
+  var MIN_DUR = 0.18;
+  var MAX_DUR = 0.7;
 
   var nodes = document.querySelectorAll(SELECTOR);
   if (!nodes.length) return;
@@ -37,7 +36,7 @@
   // wait for the webfont (so the static fallback matches), then parse
   var waits = [];
   if (document.fonts && document.fonts.load) {
-    try { waits.push(document.fonts.load('600 1em "Caveat"')); } catch (e) {}
+    try { waits.push(document.fonts.load('700 1em "Dancing Script"')); } catch (e) {}
   }
   Promise.all(waits).catch(function () {}).then(function () {
     fetch(FONT_URL)
@@ -46,6 +45,8 @@
       .catch(function () {});
   });
 
+  var uid = 0;
+
   function init(font) {
     var io =
       "IntersectionObserver" in window
@@ -53,7 +54,7 @@
             entries.forEach(function (e) {
               if (e.isIntersecting) { activate(e.target); obs.unobserve(e.target); }
             });
-          }, { threshold: 0.3 })
+          }, { threshold: 0.25 })
         : null;
     nodes.forEach(function (el) {
       build(el, font);
@@ -63,8 +64,11 @@
   }
 
   function activate(el) {
-    el.querySelectorAll(".handwriting-word").forEach(function (w) {
-      w.classList.add("is-active");
+    var anims = el.__hwAnims || [];
+    // kick each letter's reveal at its cumulative delay -> sequential writing
+    anims.forEach(function (a) {
+      try { a.el.beginElementAt(a.delay); }
+      catch (e) { try { a.el.beginElement(); } catch (_) {} }
     });
   }
 
@@ -75,72 +79,99 @@
     var cs = getComputedStyle(el);
     var fontSize = parseFloat(cs.fontSize) || 80;
     var scaled = (fontSize / 80) * 800;
-    var penW = scaled * PEN_RATIO;
+    var upm = font.unitsPerEm;
 
-    // one shared vertical box -> one baseline for every word
-    var baseline = scaled * 0.74;
-    var vbY = -scaled * 0.34;
-    var vbH = scaled * 1.34;
+    // one shared vertical box -> every word sits on a single baseline
+    var baseline = scaled * 0.72;
+    var vbY = -scaled * 0.46;
+    var vbH = scaled * 1.55;
 
     el.setAttribute("aria-label", text);
     el.textContent = "";
 
+    var anims = [];
     var delay = INITIAL_DELAY;
     var words = text.split(" ");
 
     words.forEach(function (word, wi) {
       var span = document.createElement("span");
       span.className = "handwriting-word";
-      span.style.verticalAlign = "top";
-      span.style.marginRight = "0.16em";
 
       var svg = document.createElementNS(NS, "svg");
-      var x = 6;
+      var defs = document.createElementNS(NS, "defs");
+      svg.appendChild(defs);
+      var x = 8;
 
       for (var i = 0; i < word.length; i++) {
         var ch = word[i];
         var glyph = font.charToGlyph(ch);
-        var d = font.getPath(ch, x, baseline, scaled).toPathData(2);
+        var adv = (glyph.advanceWidth * scaled) / upm;
+        var path = font.getPath(ch, x, baseline, scaled);
+        var d = path.toPathData(2);
+
+        // reveal extent = glyph's own ink box (covers tails/overhangs)
+        var bb = null;
+        try { bb = path.getBoundingBox(); } catch (e) {}
+        var hasInk = bb && isFinite(bb.x1) && bb.x2 > bb.x1;
+        var startX = hasInk ? bb.x1 - scaled * 0.02 : x;
+        var endX = hasInk ? bb.x2 + scaled * 0.05 : x + adv;
+        var revealW = Math.max(endX - startX, adv * 0.6);
+        var dur = Math.min(MAX_DUR, Math.max(MIN_DUR, (revealW / upm) * PER_EM));
+
         var p = document.createElementNS(NS, "path");
         p.setAttribute("d", d);
-        p.setAttribute("class", "draw-path");
-        p.style.strokeWidth = penW.toFixed(1) + "px";
-        var len = measure(d);
-        var dur = Math.min(MAX_DUR, Math.max(MIN_DUR, (len / font.unitsPerEm) * EM_SECONDS));
-        p.style.setProperty("--l", len.toFixed(2));
-        p.style.setProperty("--t", dur.toFixed(2) + "s");
-        p.style.setProperty("--d", delay.toFixed(3) + "s");
-        x += (glyph.advanceWidth * scaled) / font.unitsPerEm;
-        delay += DELAY_MULTIPLIER * dur;
+        p.setAttribute("class", "hw-glyph");
+
+        if (hasInk) {
+          // clip rect sweeps left->right across this glyph as it's "written"
+          var cpId = "hwc" + (++uid);
+          var cp = document.createElementNS(NS, "clipPath");
+          cp.setAttribute("id", cpId);
+          cp.setAttribute("clipPathUnits", "userSpaceOnUse");
+          var rect = document.createElementNS(NS, "rect");
+          rect.setAttribute("x", startX.toFixed(1));
+          rect.setAttribute("y", vbY.toFixed(1));
+          rect.setAttribute("height", vbH.toFixed(1));
+          rect.setAttribute("width", reduce ? (endX - startX).toFixed(1) : "0");
+          if (!reduce) {
+            var an = document.createElementNS(NS, "animate");
+            an.setAttribute("attributeName", "width");
+            an.setAttribute("from", "0");
+            an.setAttribute("to", (endX - startX).toFixed(1));
+            an.setAttribute("dur", dur.toFixed(2) + "s");
+            an.setAttribute("fill", "freeze");
+            an.setAttribute("begin", "indefinite");
+            an.setAttribute("calcMode", "spline");
+            an.setAttribute("keyTimes", "0;1");
+            an.setAttribute("keySplines", "0.45 0 0.25 1");
+            rect.appendChild(an);
+            anims.push({ el: an, delay: delay });
+          }
+          cp.appendChild(rect);
+          defs.appendChild(cp);
+          p.setAttribute("clip-path", "url(#" + cpId + ")");
+          delay += OVERLAP * dur;
+        }
+
         svg.appendChild(p);
+        x += adv;
       }
 
-      var vbW = x + 6;
-      svg.setAttribute("viewBox", "0 " + vbY + " " + vbW + " " + vbH);
+      var vbW = x + 8;
+      svg.setAttribute("viewBox", "0 " + vbY.toFixed(1) + " " + vbW.toFixed(1) + " " + vbH.toFixed(1));
       svg.setAttribute("preserveAspectRatio", "xMinYMid meet");
       svg.style.display = "block";
       svg.style.width = fontSize * (vbW / scaled) + "px";
-      svg.style.height = "auto"; // equals hPx when not width-capped; never squishes
+      svg.style.height = "auto";   // keeps aspect -> no mobile squish
       svg.style.maxWidth = "100%";
       svg.style.overflow = "visible";
 
       span.appendChild(svg);
       el.appendChild(span);
 
-      if (wi < words.length - 1) delay += DELAY_MULTIPLIER * WORD_GAP;
+      if (wi < words.length - 1) delay += OVERLAP * WORD_GAP;
     });
-  }
 
-  function measure(d) {
-    var tmp = document.createElementNS(NS, "svg");
-    tmp.setAttribute("style", "position:absolute;width:0;height:0;overflow:hidden");
-    var p = document.createElementNS(NS, "path");
-    p.setAttribute("d", d);
-    tmp.appendChild(p);
-    document.body.appendChild(tmp);
-    var l = 0;
-    try { l = p.getTotalLength(); } catch (e) {}
-    document.body.removeChild(tmp);
-    return l || 1;
+    el.__hwAnims = anims;
   }
 })();

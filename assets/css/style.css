@@ -57,7 +57,7 @@
 
   --font-sans: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-script: "Parisienne", "Snell Roundhand", "Brush Script MT", cursive;
-  --font-hand: "Caveat", "Segoe Script", "Bradley Hand", cursive;
+  --font-hand: "Dancing Script", "Snell Roundhand", "Segoe Script", cursive;
 
   --maxw: 1340px;
   --gutter: clamp(1.25rem, 4vw, 4rem);
@@ -223,8 +223,11 @@ h1, h2, h3, h4 { line-height: 1.05; letter-spacing: -0.01em; font-weight: 800; }
 }
 .title-special--cream { color: var(--c-cream); }
 
-.handwriting-word { display: inline-block; margin-right: 0.18em; vertical-align: top; }
+.handwriting-word { display: inline-block; margin-right: 0.16em; vertical-align: top; }
 .handwriting-word svg { display: block; width: 100%; height: auto; overflow: visible; }
+
+/* filled, solid letters — revealed L->R by a per-letter clip mask in JS */
+.hw-glyph { fill: currentColor; stroke: none; }
 
 .draw-path {
   fill: none;
@@ -334,13 +337,14 @@ h1, h2, h3, h4 { line-height: 1.05; letter-spacing: -0.01em; font-weight: 800; }
   gap: 1.5rem;
 }
 
-/* cursive "haven" wordmark logo */
+/* cursive "Atul's Cafekery" wordmark logo */
 .brand {
   font-family: var(--font-script);
-  font-size: 3rem;
+  font-size: clamp(1.6rem, 5.2vw, 2.5rem);
   line-height: 1;
   color: var(--c-cocoa);
   padding-top: 0.4rem;
+  white-space: nowrap;
 }
 
 .nav { display: flex; align-items: center; gap: 2.4rem; }
@@ -427,7 +431,7 @@ body.noScroll .buttonToggleNavAside span:nth-child(3) { transform: translateY(-7
   align-items: stretch;
   gap: clamp(0.05rem, 0.8vw, 0.5rem);
   font-weight: 900;
-  font-size: clamp(3.2rem, 18vw, 24rem);
+  font-size: clamp(2.3rem, 13vw, 17rem); /* 8 letters (CAFEKERY) fit one line */
   line-height: 0.78;
   /* ONE continuous food photo flowing across the whole word, with a
      warm food-coloured gradient underneath as an automatic fallback.

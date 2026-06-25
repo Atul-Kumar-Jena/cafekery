@@ -19,35 +19,35 @@
     {
       cat: "Brunch",
       items: [
-        { id: "feta-focaccia", name: "Feta Dip & Focaccia", desc: "Whipped feta, spring herbs, chilli oil.", price: 13 },
-        { id: "big-brekkie", name: "HAVEN Big Brekkie", desc: "Two eggs, tomato, mushrooms, beans, bacon, sourdough.", price: 19 },
-        { id: "green-shakshuka", name: "Green Shakshuka", desc: "Eggs baked in spinach & courgette, feta, dukkah.", price: 17 },
-        { id: "smashed-avo", name: "Smashed Avo & Poached Eggs", desc: "Pickled onion, dukkah, lemon, sourdough.", price: 16 },
+        { id: "feta-focaccia", name: "Feta Dip & Focaccia", desc: "Whipped feta, spring herbs, chilli oil.", price: 390 },
+        { id: "big-brekkie", name: "Cafekery Big Brekkie", desc: "Two eggs, tomato, mushrooms, beans, bacon, sourdough.", price: 570 },
+        { id: "green-shakshuka", name: "Green Shakshuka", desc: "Eggs baked in spinach & courgette, feta, dukkah.", price: 510 },
+        { id: "smashed-avo", name: "Smashed Avo & Poached Eggs", desc: "Pickled onion, dukkah, lemon, sourdough.", price: 480 },
       ],
     },
     {
       cat: "Sweet",
       items: [
-        { id: "spring-pancakes", name: "Spring Pancakes", desc: "Strawberries, diplomat cream, thyme-pepper meringue.", price: 14 },
-        { id: "french-brioche", name: "Tiramisu French Brioche", desc: "Mascarpone cream, espresso, cocoa.", price: 15 },
-        { id: "choc-cremeux", name: "Dark Chocolate Crémeux", desc: "70% crémeux, olive oil, buckwheat, sea salt.", price: 11 },
+        { id: "spring-pancakes", name: "Spring Pancakes", desc: "Strawberries, diplomat cream, thyme-pepper meringue.", price: 420 },
+        { id: "french-brioche", name: "Tiramisu French Brioche", desc: "Mascarpone cream, espresso, cocoa.", price: 450 },
+        { id: "choc-cremeux", name: "Dark Chocolate Crémeux", desc: "70% crémeux, olive oil, buckwheat, sea salt.", price: 330 },
       ],
     },
     {
       cat: "Coffee",
       items: [
-        { id: "espresso", name: "Espresso / Macchiato", desc: "", price: 2.8 },
-        { id: "flat-white", name: "Flat White / Cappuccino", desc: "", price: 4 },
-        { id: "guest-filter", name: "Guest Filter — Black Mass", desc: "This month's rotating guest roaster.", price: 4.5 },
-        { id: "iced-latte", name: "Iced Latte", desc: "", price: 4.5 },
+        { id: "espresso", name: "Espresso / Macchiato", desc: "", price: 90 },
+        { id: "flat-white", name: "Flat White / Cappuccino", desc: "", price: 120 },
+        { id: "guest-filter", name: "Guest Filter — Black Mass", desc: "This month's rotating guest roaster.", price: 140 },
+        { id: "iced-latte", name: "Iced Latte", desc: "", price: 140 },
       ],
     },
     {
       cat: "Cold & fresh",
       items: [
-        { id: "green-juice", name: "Cold-Pressed Green Juice", desc: "Cucumber, apple, spinach, celery, lemon, ginger.", price: 7 },
-        { id: "smoothie", name: "Berry & Banana Smoothie", desc: "", price: 7.5 },
-        { id: "lemonade", name: "House Lemonade", desc: "", price: 5 },
+        { id: "green-juice", name: "Cold-Pressed Green Juice", desc: "Cucumber, apple, spinach, celery, lemon, ginger.", price: 210 },
+        { id: "smoothie", name: "Berry & Banana Smoothie", desc: "", price: 230 },
+        { id: "lemonade", name: "House Lemonade", desc: "", price: 150 },
       ],
     },
   ];
@@ -102,7 +102,7 @@
             '<div class="oitem__info">' +
               '<div class="oitem__name">' + it.name + "</div>" +
               (it.desc ? '<div class="oitem__desc">' + it.desc + "</div>" : "") +
-              '<div class="oitem__price">€' + fmt(it.price) + "</div>" +
+              '<div class="oitem__price">₹' + fmt(it.price) + "</div>" +
             "</div>" +
             '<div class="qty">' +
               '<button type="button" data-act="dec" aria-label="Remove one"' + (qty ? "" : " disabled") + ">−</button>" +
@@ -129,7 +129,7 @@
 
   function syncBar() {
     var t = totals();
-    if (elBarSum) elBarSum.innerHTML = t.count + (t.count === 1 ? " item" : " items") + "<small>€" + fmt(t.sum) + "</small>";
+    if (elBarSum) elBarSum.innerHTML = t.count + (t.count === 1 ? " item" : " items") + "<small>₹" + fmt(t.sum) + "</small>";
     if (elBar) elBar.classList.toggle("is-shown", t.count > 0 && validTable);
   }
 
