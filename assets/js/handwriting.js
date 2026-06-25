@@ -1,14 +1,13 @@
 /* =============================================================
    ATUL's CAFEkery — handwriting "write-on" for cursive headings
-   Each .title-special is rebuilt with OpenType.js as word spans of
-   FILLED glyph shapes (solid, defined letters — not hollow strokes).
-   Every letter is then REVEALED left-to-right in reading order with
-   its own clip mask, sequenced with a little overlap, so the word
-   flows out exactly as a hand writes connected cursive — not a single
-   curtain wipe, and no random stroke start/end. Uses Dancing Script,
-   a connected handwriting font: because the letters are FILLED, the
-   joins simply merge like real writing (overlap never glitches).
-   Self-hosted font + lib (no CDN). Reduced-motion shows finished text.
+   Each .title-special is rebuilt with OpenType.js into FILLED
+   connected-cursive glyphs (Dancing Script). A small PEN NIB then
+   travels left-to-right along the word and the ink is revealed only
+   *behind* the nib (per-letter clip masks), driven by a single GSAP
+   timeline — so it reads as a hand writing, with a visible pen, not
+   a curtain wipe. Letters are filled, so cursive joins merge cleanly
+   (no random stroke start/end, no double lines, no overlap glitch).
+   Self-hosted font + lib. Reduced-motion / no-GSAP -> finished text.
    ============================================================= */
 (function () {
   "use strict";
@@ -18,22 +17,22 @@
   var FONT_URL = "assets/fonts/dancingscript.ttf";
 
   // ---- Feel (genuine handwriting pace) ----
-  var INITIAL_DELAY = 0.15;
-  var PER_EM = 0.85;   // pen speed: seconds to sweep one em of letter width
-  var OVERLAP = 0.72;  // start next letter before the previous finishes
-  var WORD_GAP = 0.16;
-  var MIN_DUR = 0.18;
-  var MAX_DUR = 0.7;
+  var INITIAL_DELAY = 0.12;
+  var PER_EM = 0.95;   // pen speed: seconds to write one em of letter width
+  var OVERLAP = 0.6;   // start next letter while the previous still finishing
+  var WORD_GAP = 0.18; // pause as the hand lifts between words
+  var MIN_DUR = 0.16;
+  var MAX_DUR = 0.62;
 
   var nodes = document.querySelectorAll(SELECTOR);
   if (!nodes.length) return;
 
   var reduce =
     window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var hasGsap = typeof window.gsap !== "undefined";
 
   if (typeof window.opentype === "undefined" || !window.fetch) return;
 
-  // wait for the webfont (so the static fallback matches), then parse
   var waits = [];
   if (document.fonts && document.fonts.load) {
     try { waits.push(document.fonts.load('700 1em "Dancing Script"')); } catch (e) {}
@@ -54,22 +53,57 @@
             entries.forEach(function (e) {
               if (e.isIntersecting) { activate(e.target); obs.unobserve(e.target); }
             });
-          }, { threshold: 0.25 })
+          }, { threshold: 0.2 })
         : null;
     nodes.forEach(function (el) {
       build(el, font);
-      if (reduce || !io) activate(el);
+      if (reduce || !hasGsap || !io) finish(el);
       else io.observe(el);
     });
   }
 
-  function activate(el) {
-    var anims = el.__hwAnims || [];
-    // kick each letter's reveal at its cumulative delay -> sequential writing
-    anims.forEach(function (a) {
-      try { a.el.beginElementAt(a.delay); }
-      catch (e) { try { a.el.beginElement(); } catch (_) {} }
+  // jump straight to finished (reduced-motion / no GSAP / no observer)
+  function finish(el) {
+    (el.__hwLetters || []).forEach(function (L) {
+      L.rect.setAttribute("width", (L.endX - L.startX).toFixed(1));
     });
+    (el.__hwNibs || []).forEach(function (n) { n.style.opacity = 0; });
+  }
+
+  // build one continuous GSAP timeline: nib travels, ink follows
+  function activate(el) {
+    var words = el.__hwWords || [];
+    var tl = window.gsap.timeline();
+    var t = INITIAL_DELAY;
+
+    words.forEach(function (W) {
+      if (!W.letters.length) return;
+      var nib = W.nib;
+      var wordStart = t;
+      var wordDur = sumDur(W.letters);
+      var lastX = W.letters[W.letters.length - 1].endX;
+
+      // nib touches down, sweeps the whole word once (no backward jumps),
+      // then lifts — the ink is revealed letter-by-letter just behind it
+      tl.to(nib, { opacity: 1, duration: 0.1, ease: "power1.out" }, wordStart);
+      tl.to(nib, { attr: { cx: lastX.toFixed(1) }, duration: wordDur, ease: "none" }, wordStart);
+      tl.to(nib, { opacity: 0, duration: 0.16, ease: "power1.in" }, wordStart + wordDur - 0.04);
+
+      W.letters.forEach(function (L) {
+        tl.to(L.rect, { attr: { width: (L.endX - L.startX).toFixed(1) }, duration: L.dur, ease: "none" }, t);
+        t += L.dur * OVERLAP;
+      });
+
+      t = wordStart + wordDur + WORD_GAP;
+    });
+  }
+
+  function sumDur(letters) {
+    var t = 0;
+    for (var i = 0; i < letters.length; i++) {
+      t += i < letters.length - 1 ? letters[i].dur * OVERLAP : letters[i].dur;
+    }
+    return t;
   }
 
   function build(el, font) {
@@ -81,19 +115,20 @@
     var scaled = (fontSize / 80) * 800;
     var upm = font.unitsPerEm;
 
-    // one shared vertical box -> every word sits on a single baseline
+    // shared vertical box -> every word sits on one baseline
     var baseline = scaled * 0.72;
     var vbY = -scaled * 0.46;
     var vbH = scaled * 1.55;
+    var nibR = scaled * 0.028;
 
     el.setAttribute("aria-label", text);
     el.textContent = "";
 
-    var anims = [];
-    var delay = INITIAL_DELAY;
-    var words = text.split(" ");
+    var wordsMeta = [];
+    var lettersAll = [];
+    var nibsAll = [];
 
-    words.forEach(function (word, wi) {
+    text.split(" ").forEach(function (word) {
       var span = document.createElement("span");
       span.className = "handwriting-word";
 
@@ -101,6 +136,7 @@
       var defs = document.createElementNS(NS, "defs");
       svg.appendChild(defs);
       var x = 8;
+      var letters = [];
 
       for (var i = 0; i < word.length; i++) {
         var ch = word[i];
@@ -109,21 +145,20 @@
         var path = font.getPath(ch, x, baseline, scaled);
         var d = path.toPathData(2);
 
-        // reveal extent = glyph's own ink box (covers tails/overhangs)
         var bb = null;
         try { bb = path.getBoundingBox(); } catch (e) {}
         var hasInk = bb && isFinite(bb.x1) && bb.x2 > bb.x1;
-        var startX = hasInk ? bb.x1 - scaled * 0.02 : x;
-        var endX = hasInk ? bb.x2 + scaled * 0.05 : x + adv;
-        var revealW = Math.max(endX - startX, adv * 0.6);
-        var dur = Math.min(MAX_DUR, Math.max(MIN_DUR, (revealW / upm) * PER_EM));
 
         var p = document.createElementNS(NS, "path");
         p.setAttribute("d", d);
         p.setAttribute("class", "hw-glyph");
 
         if (hasInk) {
-          // clip rect sweeps left->right across this glyph as it's "written"
+          var startX = bb.x1 - scaled * 0.03;
+          var endX = bb.x2 + scaled * 0.04;
+          var revealW = Math.max(endX - startX, adv * 0.6);
+          var dur = Math.min(MAX_DUR, Math.max(MIN_DUR, (revealW / upm) * PER_EM));
+
           var cpId = "hwc" + (++uid);
           var cp = document.createElementNS(NS, "clipPath");
           cp.setAttribute("id", cpId);
@@ -132,46 +167,46 @@
           rect.setAttribute("x", startX.toFixed(1));
           rect.setAttribute("y", vbY.toFixed(1));
           rect.setAttribute("height", vbH.toFixed(1));
-          rect.setAttribute("width", reduce ? (endX - startX).toFixed(1) : "0");
-          if (!reduce) {
-            var an = document.createElementNS(NS, "animate");
-            an.setAttribute("attributeName", "width");
-            an.setAttribute("from", "0");
-            an.setAttribute("to", (endX - startX).toFixed(1));
-            an.setAttribute("dur", dur.toFixed(2) + "s");
-            an.setAttribute("fill", "freeze");
-            an.setAttribute("begin", "indefinite");
-            an.setAttribute("calcMode", "spline");
-            an.setAttribute("keyTimes", "0;1");
-            an.setAttribute("keySplines", "0.45 0 0.25 1");
-            rect.appendChild(an);
-            anims.push({ el: an, delay: delay });
-          }
+          rect.setAttribute("width", reduce || !hasGsap ? (endX - startX).toFixed(1) : "0");
           cp.appendChild(rect);
           defs.appendChild(cp);
           p.setAttribute("clip-path", "url(#" + cpId + ")");
-          delay += OVERLAP * dur;
-        }
 
+          var meta = { rect: rect, startX: startX, endX: endX, dur: dur };
+          letters.push(meta);
+          lettersAll.push(meta);
+        }
         svg.appendChild(p);
         x += adv;
       }
+
+      // pen nib for this word
+      var nib = document.createElementNS(NS, "circle");
+      nib.setAttribute("class", "hw-nib");
+      nib.setAttribute("r", nibR.toFixed(1));
+      nib.setAttribute("cy", (baseline - scaled * 0.16).toFixed(1));
+      nib.setAttribute("cx", (letters.length ? letters[0].startX : 8).toFixed(1));
+      nib.style.opacity = 0;
+      svg.appendChild(nib);
+      nibsAll.push(nib);
 
       var vbW = x + 8;
       svg.setAttribute("viewBox", "0 " + vbY.toFixed(1) + " " + vbW.toFixed(1) + " " + vbH.toFixed(1));
       svg.setAttribute("preserveAspectRatio", "xMinYMid meet");
       svg.style.display = "block";
       svg.style.width = fontSize * (vbW / scaled) + "px";
-      svg.style.height = "auto";   // keeps aspect -> no mobile squish
+      svg.style.height = "auto";
       svg.style.maxWidth = "100%";
       svg.style.overflow = "visible";
 
       span.appendChild(svg);
       el.appendChild(span);
 
-      if (wi < words.length - 1) delay += OVERLAP * WORD_GAP;
+      wordsMeta.push({ letters: letters, nib: nib });
     });
 
-    el.__hwAnims = anims;
+    el.__hwWords = wordsMeta;
+    el.__hwLetters = lettersAll;
+    el.__hwNibs = nibsAll;
   }
 })();

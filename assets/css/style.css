@@ -226,8 +226,9 @@ h1, h2, h3, h4 { line-height: 1.05; letter-spacing: -0.01em; font-weight: 800; }
 .handwriting-word { display: inline-block; margin-right: 0.16em; vertical-align: top; }
 .handwriting-word svg { display: block; width: 100%; height: auto; overflow: visible; }
 
-/* filled, solid letters — revealed L->R by a per-letter clip mask in JS */
+/* filled, solid letters — revealed L->R behind a travelling pen nib */
 .hw-glyph { fill: currentColor; stroke: none; }
+.hw-nib { fill: currentColor; }
 
 .draw-path {
   fill: none;
@@ -1023,12 +1024,12 @@ body.noScroll .buttonToggleNavAside span:nth-child(3) { transform: translateY(-7
 .lineart-doodles { z-index: 4; }   /* above section content */
 .lineart-scroll path {
   fill: none;
-  stroke: #cf8f54;
-  stroke-width: 3;
+  stroke: #d59a63;
+  stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
-  opacity: 0.7;
+  opacity: 0.5;
 }
 .lineart-doodles path {
   fill: none;

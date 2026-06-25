@@ -61,11 +61,12 @@
     function docTop(el) { var y = 0; while (el) { y += el.offsetTop; el = el.offsetParent; } return y; }
     function clearST() { sts.forEach(function (s) { try { s.kill(); } catch (e) {} }); sts = []; }
 
-    // smooth, graceful vertical weave (long S-curves)
+    // smooth, graceful vertical weave (gentle long S-curves, kept narrow
+    // so it reads as an elegant thread down the page, not a slash across)
     function snake(w, y0, y1) {
-      var amp = Math.min(w * 0.3, 360);
+      var amp = Math.min(w * 0.16, 150);
       var cx = w * 0.5;
-      var seg = Math.max(window.innerHeight * 0.9, 560);
+      var seg = Math.max(window.innerHeight * 1.15, 720);
       var d = "M " + cx.toFixed(1) + " " + y0.toFixed(1);
       var y = y0, dir = 1;
       while (y < y1) {
@@ -213,8 +214,17 @@
     // Rebuild after layout settles (fonts/images + the pin that adds
     // scroll height) so the path spans the real page height.
     window.addEventListener("load", function () { setTimeout(build, 200); });
-    var rt;
-    window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(build, 300); });
+    // Only rebuild on a real WIDTH change. On mobile the address bar
+    // hides/shows while scrolling, firing resize with a new innerHeight —
+    // rebuilding then would tear down and redraw the art mid-scroll
+    // (the "distortion"). Ignore height-only changes.
+    var lastW = window.innerWidth, rt;
+    window.addEventListener("resize", function () {
+      if (window.innerWidth === lastW) return;
+      lastW = window.innerWidth;
+      clearTimeout(rt);
+      rt = setTimeout(build, 300);
+    });
   })();
 
   /* ---- The View: horizontal side-scroll --------------------- */
