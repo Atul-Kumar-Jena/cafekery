@@ -226,9 +226,8 @@ h1, h2, h3, h4 { line-height: 1.05; letter-spacing: -0.01em; font-weight: 800; }
 .handwriting-word { display: inline-block; margin-right: 0.16em; vertical-align: top; }
 .handwriting-word svg { display: block; width: 100%; height: auto; overflow: visible; }
 
-/* filled, solid letters — revealed L->R behind a travelling pen nib */
+/* filled, solid letters — revealed L->R letter by letter (clip mask) */
 .hw-glyph { fill: currentColor; stroke: none; }
-.hw-nib { fill: currentColor; }
 
 .draw-path {
   fill: none;

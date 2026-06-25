@@ -1,12 +1,12 @@
 /* =============================================================
    ATUL's CAFEkery — handwriting "write-on" for cursive headings
    Each .title-special is rebuilt with OpenType.js into FILLED
-   connected-cursive glyphs (Dancing Script). A small PEN NIB then
-   travels left-to-right along the word and the ink is revealed only
-   *behind* the nib (per-letter clip masks), driven by a single GSAP
-   timeline — so it reads as a hand writing, with a visible pen, not
-   a curtain wipe. Letters are filled, so cursive joins merge cleanly
-   (no random stroke start/end, no double lines, no overlap glitch).
+   connected-cursive glyphs (Dancing Script). Each letter's ink is then
+   revealed left-to-right in reading order via its own clip mask, driven
+   by a single GSAP timeline with a little overlap — so the word writes
+   itself out letter by letter, not as one curtain wipe. Letters are
+   filled, so cursive joins merge cleanly (no random stroke start/end,
+   no double lines, no overlap glitch, no stray pen artifacts).
    Self-hosted font + lib. Reduced-motion / no-GSAP -> finished text.
    ============================================================= */
 (function () {
@@ -67,10 +67,11 @@
     (el.__hwLetters || []).forEach(function (L) {
       L.rect.setAttribute("width", (L.endX - L.startX).toFixed(1));
     });
-    (el.__hwNibs || []).forEach(function (n) { n.style.opacity = 0; });
   }
 
-  // build one continuous GSAP timeline: nib travels, ink follows
+  // one continuous GSAP timeline: each letter's ink is revealed L->R in
+  // reading order with a little overlap, so the word writes itself out
+  // letter by letter (no separate pen element to glitch / strand).
   function activate(el) {
     var words = el.__hwWords || [];
     var tl = window.gsap.timeline();
@@ -78,23 +79,12 @@
 
     words.forEach(function (W) {
       if (!W.letters.length) return;
-      var nib = W.nib;
       var wordStart = t;
-      var wordDur = sumDur(W.letters);
-      var lastX = W.letters[W.letters.length - 1].endX;
-
-      // nib touches down, sweeps the whole word once (no backward jumps),
-      // then lifts — the ink is revealed letter-by-letter just behind it
-      tl.to(nib, { opacity: 1, duration: 0.1, ease: "power1.out" }, wordStart);
-      tl.to(nib, { attr: { cx: lastX.toFixed(1) }, duration: wordDur, ease: "none" }, wordStart);
-      tl.to(nib, { opacity: 0, duration: 0.16, ease: "power1.in" }, wordStart + wordDur - 0.04);
-
       W.letters.forEach(function (L) {
-        tl.to(L.rect, { attr: { width: (L.endX - L.startX).toFixed(1) }, duration: L.dur, ease: "none" }, t);
+        tl.to(L.rect, { attr: { width: (L.endX - L.startX).toFixed(1) }, duration: L.dur, ease: "power1.out" }, t);
         t += L.dur * OVERLAP;
       });
-
-      t = wordStart + wordDur + WORD_GAP;
+      t = wordStart + sumDur(W.letters) + WORD_GAP;
     });
   }
 
@@ -119,14 +109,12 @@
     var baseline = scaled * 0.72;
     var vbY = -scaled * 0.46;
     var vbH = scaled * 1.55;
-    var nibR = scaled * 0.028;
 
     el.setAttribute("aria-label", text);
     el.textContent = "";
 
     var wordsMeta = [];
     var lettersAll = [];
-    var nibsAll = [];
 
     text.split(" ").forEach(function (word) {
       var span = document.createElement("span");
@@ -180,16 +168,6 @@
         x += adv;
       }
 
-      // pen nib for this word
-      var nib = document.createElementNS(NS, "circle");
-      nib.setAttribute("class", "hw-nib");
-      nib.setAttribute("r", nibR.toFixed(1));
-      nib.setAttribute("cy", (baseline - scaled * 0.16).toFixed(1));
-      nib.setAttribute("cx", (letters.length ? letters[0].startX : 8).toFixed(1));
-      nib.style.opacity = 0;
-      svg.appendChild(nib);
-      nibsAll.push(nib);
-
       var vbW = x + 8;
       svg.setAttribute("viewBox", "0 " + vbY.toFixed(1) + " " + vbW.toFixed(1) + " " + vbH.toFixed(1));
       svg.setAttribute("preserveAspectRatio", "xMinYMid meet");
@@ -202,11 +180,10 @@
       span.appendChild(svg);
       el.appendChild(span);
 
-      wordsMeta.push({ letters: letters, nib: nib });
+      wordsMeta.push({ letters: letters });
     });
 
     el.__hwWords = wordsMeta;
     el.__hwLetters = lettersAll;
-    el.__hwNibs = nibsAll;
   }
 })();
