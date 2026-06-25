@@ -223,27 +223,33 @@ h1, h2, h3, h4 { line-height: 1.05; letter-spacing: -0.01em; font-weight: 800; }
 }
 .title-special--cream { color: var(--c-cream); }
 
-/* "Writing" reveal: the real cursive text is written one letter at a time,
-   in reading order. JS wraps each word in .hw-word (so wrapping still breaks
-   on spaces) and each letter in .hw-char, then lights letters in sequence.
-   Each letter wipes in left-to-right with a clip-path — a pen drawing that
-   glyph — so multi-line headings write line by line, letter by letter.
-   Negative insets give Parisienne's flourishes room so nothing is cropped. */
-.title-special.hw-reveal { white-space: normal; }
-.title-special .hw-word { display: inline-block; white-space: nowrap; }
-.title-special .hw-char {
-  display: inline-block;
-  clip-path: inset(-0.3em 100% -0.4em -0.12em);
+/* Apple-style handwriting: JS reads the real Parisienne glyph OUTLINES
+   (via opentype.js) and animates a pen drawing them with stroke-dashoffset
+   — the line grows along each letter in reading order, line by line — then
+   the strokes fill in solid. Not a reveal: the letterforms are drawn. */
+.title-special.hw-ink { display: inline-block; }
+.title-special.hw-ink .hw-svg { display: block; overflow: visible; max-width: 100%; }
+.title-special.hw-ink .hw-svg path {
+  fill: currentColor;
+  fill-opacity: 0;
+  stroke: currentColor;
+  stroke-opacity: 1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
-.title-special .hw-char.lit {
-  clip-path: inset(-0.3em -0.12em -0.4em -0.12em);
-  transition: clip-path 0.16s linear;
+/* once a heading finishes drawing, crossfade the pen strokes into solid fill */
+.title-special.hw-ink .hw-svg path.inked {
+  fill-opacity: 1;
+  stroke-opacity: 0;
+  transition: fill-opacity 0.35s ease, stroke-opacity 0.35s ease;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .title-special .hw-char,
-  .title-special .hw-char.lit {
-    clip-path: none;
+  .title-special.hw-ink .hw-svg path,
+  .title-special.hw-ink .hw-svg path.inked {
+    fill-opacity: 1;
+    stroke-opacity: 0;
+    stroke-dashoffset: 0 !important;
     transition: none;
   }
 }
